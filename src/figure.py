@@ -1,5 +1,5 @@
 from src.coord import Coord
-from src.enum import Color, FigureType
+from src.enums import Color, FigureType
 
 
 class Figure:

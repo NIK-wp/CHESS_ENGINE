@@ -7,7 +7,7 @@ class Position:
         self.cord_of_white_king: Coord | None = None
         self.cord_of_black_king: Coord | None = None
         self.white_figures: list[Figure] = []
-        self.black_figure: list[Figure] = []
+        self.black_figures: list[Figure] = []
 
     def check_to_king(self) -> bool:
         pass

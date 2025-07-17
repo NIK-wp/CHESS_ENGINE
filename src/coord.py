@@ -1,8 +1,8 @@
 class Coord:
-    def __init__(self) -> None:
-        self.x: int | None = None
-        self.y: int | None = None
-        self.valid: bool = False
+    def __init__(self, x: int, y: int) -> None:
+        self.x: int = x
+        self.y: int = y
+        self.valid: bool = False  # todo athtomatic check
 
     def check_valid(self) -> bool:
         pass
