@@ -1,3 +1,5 @@
+import hashlib
+
 from src.coord import Coord
 from src.enums import Color, FigureType
 from src.figure import Figure
@@ -89,12 +91,23 @@ class Chess:
         return transformator[string]
 
 
+if __name__ == '__main__':
+    fen = '8/8/8/8/8/8/8/8 w KQkq - 0 1'
+    check_board = Chess(fen)
+    check_board.show_board()
+
+    str_board = str(check_board.board)
+    byte_str = str_board.encode()
+    hash_board = hashlib.sha256(byte_str)
+    str_hash = hash_board.hexdigest()
+    print(str_hash)
 
 
 
-# # king + pawns
-# chess_game = Chess('8/8/4p3/3K4/2P5/8/8/8 w - - 0 1')
-# chess_game.generate_moves()
-# chess_game.show_moves()
-chess_game = Chess('8/8/4p3/3K4/2P5/8/8/8 w - - 0 1')
-chess_game.show_board()
+
+    # # king + pawns
+    # chess_game = Chess('8/8/4p3/3K4/2P5/8/8/8 w - - 0 1')
+    # chess_game.generate_moves()
+    # chess_game.show_moves()
+    # chess_game = Chess('8/8/4p3/3K4/2P5/8/8/8 w - - 0 1')
+    # chess_game.show_board()

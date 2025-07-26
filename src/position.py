@@ -14,3 +14,4 @@ class Position:
 
     def past_pawn(self) -> bool:
         pass
+
