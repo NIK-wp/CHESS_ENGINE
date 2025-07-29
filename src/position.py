@@ -1,9 +1,14 @@
+"""Модуль, содержащий реализацию класса Position."""
+
 from src.coord import Coord
 from src.figure import Figure
 
 
 class Position:
+    """Класс, реализующий шахматную позицию."""
+
     def __init__(self) -> None:
+        """Инициализирует поля объекта значениями по умолчанию."""
         self.cord_of_white_king: Coord | None = None
         self.cord_of_black_king: Coord | None = None
         self.white_figures: list[Figure] = []
@@ -14,4 +19,3 @@ class Position:
 
     def past_pawn(self) -> bool:
         pass
-

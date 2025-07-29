@@ -1,3 +1,5 @@
+"""Модуль, содержащий реализацию класса Chess."""
+
 import hashlib
 
 from src.coord import Coord
@@ -5,35 +7,21 @@ from src.enums import Color, FigureType
 from src.figure import Figure
 from src.position import Position
 
-"""импорт класса Coord из другого файла"""
-
 
 class Chess:
-    """
-    Базовый класс для визуализации и логики шахмат
-
-    """
+    """Базовый класс для визуализации и логики шахмат."""
 
     def __init__(self, fen: str) -> None:
-        """
+        """Иницилизирует поля класса.
+
         Args:
-            board: двумерный список для представления шахматной доски
-
-            order_of_move: Отслеживает,чей ход ('white' или 'black')
-
-            castling: Словарь для отслеживания наличия рокировок
-
-            full_move_number: Подсчитывает общее количество ходов в игре
-
-            halfmove_clock: Подсчитывает количество ходов без движения пешек в соответствии с правилом о 50 ходах
-
-            coord_of_en_passant: отслеживает координату хода пешки на 2 клетки вперёд
+            fen(str) : Нотация Форсайта — Эдвардса. Строка, которая кодирует позицию на доске.
         """
         self.board: list[list[str]] = [['' for _ in range(8)] for _ in range(8)]
         self.order_of_move: str = 'w'
         self.castling: dict = {}
         self.full_move_number: int = 0
-        self.halfmove_clock: int = 0
+        self.half_move_clock: int = 0
         self.coord_of_en_passant: Coord | None = None
         self.position: Position = Position()
 
@@ -53,15 +41,17 @@ class Chess:
         print('_ _ _ _ _ _ _ _')
 
     def parse_fen(self, fen: str) -> None:
-        """Анализ строк FEN Forsyth–Edwards Notation"""
+        """Парсинг строки FEN Forsyth–Edwards Notation и заполнение доски.
 
+        Args:
+            fen(str): Нотация Форсайта — Эдвардса. Строка, которая кодирует позицию на доске.
+        """
         main_of_fen = fen.split()
         board_of_fen = main_of_fen[0].split('/')
         for i in range(len(self.board)):
             for j in range(8):
                 if board_of_fen[i] == '8':
                     break
-
                 else:
                     j1 = j
                     for f in range(len(board_of_fen[i])):
