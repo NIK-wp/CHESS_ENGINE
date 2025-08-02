@@ -24,12 +24,13 @@ class Chess:
         self.half_move_clock: int = 0
         self.coord_of_en_passant: Coord | None = None
         self.position: Position = Position()
-
         self.parse_fen(fen)
+        self.position.board = self.board
 
     def show_board(self) -> None:
         """Визуализация шахматной доски."""
         print('_ _ _ _ _ _ _ _')
+        print()
         for line in self.board:
             for symbol in line:
                 if symbol:
@@ -37,7 +38,7 @@ class Chess:
                 else:
                     print('-', end=' ')
             print()
-
+        print()
         print('_ _ _ _ _ _ _ _')
 
     def parse_fen(self, fen: str) -> None:
@@ -82,22 +83,5 @@ class Chess:
 
 
 if __name__ == '__main__':
-    fen = '8/8/8/8/8/8/8/8 w KQkq - 0 1'
-    check_board = Chess(fen)
-    check_board.show_board()
+    pass
 
-    str_board = str(check_board.board)
-    byte_str = str_board.encode()
-    hash_board = hashlib.sha256(byte_str)
-    str_hash = hash_board.hexdigest()
-    print(str_hash)
-
-
-
-
-    # # king + pawns
-    # chess_game = Chess('8/8/4p3/3K4/2P5/8/8/8 w - - 0 1')
-    # chess_game.generate_moves()
-    # chess_game.show_moves()
-    # chess_game = Chess('8/8/4p3/3K4/2P5/8/8/8 w - - 0 1')
-    # chess_game.show_board()

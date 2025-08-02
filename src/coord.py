@@ -4,7 +4,7 @@
 class Coord:
     """Реализация шахматных координат."""
 
-    def __init__(self, x: int, y: int) -> None:
+    def __init__(self, y: int, x: int) -> None:
         """Заполняет поля объекта.
 
         Args:

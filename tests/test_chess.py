@@ -6,6 +6,7 @@ from src.chess import Chess
 
 
 class TestChess:
+
     @pytest.mark.parametrize(
         'fen, hash_str, comment',
         [
@@ -23,8 +24,17 @@ class TestChess:
              'ce8cf1592df24e9612eccc5d1006519261d54ee87f59dcc4cc5e6216452e1c8a', 'FourKnightsDefense')
         ]
     )
-    def test_check_attribute_board(self, fen, hash_str, comment):
+    def test_attribute_board(self, fen, hash_str, comment):
         fen_of_classical_position = fen
         position = Chess(fen_of_classical_position)
         hash_position = hashlib.sha256(str(position.board).encode()).hexdigest()
         assert hash_position == hash_str, comment
+        # fen = 'r1bqkb1r/pppp1ppp/2n2n2/4N3/4P3/2N5/PPPP1PPP/R1BQKB1R b KQkq - 0 1'
+        # check_board = Chess(fen)
+        # check_board.show_board()
+        #
+        # str_board = str(check_board.board)
+        # byte_str = str_board.encode()
+        # hash_board = hashlib.sha256(byte_str)
+        # str_hash = hash_board.hexdigest()
+        # print(str_hash)
