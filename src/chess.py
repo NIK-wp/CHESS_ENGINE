@@ -83,5 +83,8 @@ class Chess:
 
 
 if __name__ == '__main__':
-    pass
+    fen = '8/8/8/4p3/3K4/8/8/8 w - - 0 1 '
+    check_board = Chess(fen)
+    check_board.show_board()
+    print(check_board.position.check_to_king(Color.white))
 
