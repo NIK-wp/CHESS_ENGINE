@@ -5,6 +5,10 @@ from src.enums import Color
 
 
 class TestPosition:
+    # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
+    # check_board = Chess(fen)
+    # check_board.show_board()
+    # check_board.position.check_to_king(Color.white)
     @pytest.mark.parametrize(
         'fen, color, comment',
         [
@@ -25,10 +29,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -49,10 +50,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert not chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -73,10 +71,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -97,10 +92,6 @@ class TestPosition:
         chess = Chess(fen)
 
         assert not chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -117,10 +108,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -138,10 +126,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert not chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -155,10 +140,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -175,10 +157,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert not chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -192,10 +171,7 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -209,7 +185,4 @@ class TestPosition:
         chess = Chess(fen)
 
         assert not chess.position.check_to_king(color), comment
-        # fen = '8/8/8/8/2K1p2r/8/8/8 w - - 0 1'
-        # check_board = Chess(fen)
-        # check_board.show_board()
-        # check_board.position.check_to_king(Color.white)
+

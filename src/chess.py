@@ -41,6 +41,29 @@ class Chess:
         print()
         print('_ _ _ _ _ _ _ _')
 
+    def show_moves(self) -> None:
+        all_white_possible_moves = []
+        for white_fig in self.position.white_figures:
+            for move in white_fig.moves:
+                all_white_possible_moves.append(move)
+        for black_fig in self.position.black_figures:
+            for move in black_fig.moves:
+                all_white_possible_moves.append(move)
+
+        print('_ _ _ _ _ _ _ _')
+        print()
+        for y in range(8):
+            for x in range(8):
+                if Coord(y, x) in all_white_possible_moves:
+                    print('*', end=' ')
+                elif self.board[y][x] != '':
+                    print(self.board[y][x], end=' ')
+                else:
+                    print('-', end=' ')
+            print()
+        print()
+        print('_ _ _ _ _ _ _ _')
+
     def parse_fen(self, fen: str) -> None:
         """Парсинг строки FEN Forsyth–Edwards Notation и заполнение доски.
 
@@ -83,8 +106,7 @@ class Chess:
 
 
 if __name__ == '__main__':
-    fen = '8/8/8/4p3/3K4/8/8/8 w - - 0 1 '
+    fen = '8/5k2/8/8/3Q4/8/8/3K4 w - - 0 1'
     check_board = Chess(fen)
-    check_board.show_board()
-    print(check_board.position.check_to_king(Color.white))
-
+    check_board.position.generate_general_moves()
+    check_board.show_moves()

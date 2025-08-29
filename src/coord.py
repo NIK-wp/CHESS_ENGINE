@@ -17,3 +17,9 @@ class Coord:
 
     def check_valid(self) -> bool:
         pass
+
+    def __repr__(self) -> str:
+        return f'({self.x}, {self.y})'
+
+    def __eq__(self, other: 'Coord') -> bool:
+        return self.x == other.x and self.y == other.y

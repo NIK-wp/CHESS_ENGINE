@@ -125,7 +125,7 @@ class Position:
 
         # knight
         for dx, dy in ((1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (-2, 1), (2, -1), (-2, -1)):
-            if 0 < coord_of_king.y + dy < 8 and 0 < coord_of_king.x + dx < 8:
+            if 0 <= coord_of_king.y + dy < 8 and 0 <= coord_of_king.x + dx < 8:
                 cell = self.board[coord_of_king.y + dy][coord_of_king.x + dx]
                 if cell != '':
                     if cell.isupper() != my_case:
@@ -134,7 +134,7 @@ class Position:
 
         # black pawn
         for dx, dy in ((1, -1), (-1, -1)):
-            if 0 < coord_of_king.y + dy < 8 and 0 < coord_of_king.x + dx < 8:
+            if 0 <= coord_of_king.y + dy < 8 and 0 <= coord_of_king.x + dx < 8:
                 cell = self.board[coord_of_king.y + dy][coord_of_king.x + dx]
                 if cell != '':
                     if cell.isupper() != my_case:
@@ -142,7 +142,7 @@ class Position:
                             return True
         # white pawn
         for dx, dy in ((1, 1), (-1, 1)):
-            if 0 < coord_of_king.y + dy < 8 and 0 < coord_of_king.x + dx < 8:
+            if 0 <= coord_of_king.y + dy < 8 and 0 <= coord_of_king.x + dx < 8:
                 cell = self.board[coord_of_king.y + dy][coord_of_king.x + dx]
                 if cell != '':
                     if cell.isupper() != my_case:
@@ -151,7 +151,7 @@ class Position:
 
         # king
         for dx, dy in ((1, 1), (-1, -1), (-1, 1), (1, -1), (0, 1), (0, -1), (1, 0), (-1, 0)):
-            if 0 < coord_of_king.y + dy < 8 and 0 < coord_of_king.x + dx < 8:
+            if 0 <= coord_of_king.y + dy < 8 and 0 <= coord_of_king.x + dx < 8:
                 cell = self.board[coord_of_king.y + dy][coord_of_king.x + dx]
                 if cell != '':
                     if cell.upper() == 'K':
@@ -163,6 +163,9 @@ class Position:
         pass
 
     def generate_general_moves(self) -> None:
+        """Перебор всех белых и черных фигур, вызов метод generate_moves() для каждой фигуры."""
         for white_figure in self.white_figures:
             white_figure.generate_moves(self.cord_of_white_king, self.board)
 
+        for black_figure in self.black_figures:
+            black_figure.generate_moves(self.cord_of_black_king, self.board)
