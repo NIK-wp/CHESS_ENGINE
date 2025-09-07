@@ -22,10 +22,10 @@ class Chess:
         self.castling: dict = {}
         self.full_move_number: int = 0
         self.half_move_clock: int = 0
-        self.coord_of_en_passant: Coord | None = None
         self.position: Position = Position()
         self.parse_fen(fen)
         self.position.board = self.board
+        self.position.order_of_move = self.order_of_move
 
     def show_board(self) -> None:
         """Визуализация шахматной доски."""
@@ -71,6 +71,8 @@ class Chess:
             fen(str): Нотация Форсайта — Эдвардса. Строка, которая кодирует позицию на доске.
         """
         main_of_fen = fen.split()
+        if main_of_fen[3] != '-':
+            self.position.coord_of_en_passant = Coord(7 - int(main_of_fen[3][1]) + 1, self.from_letter_to_coord_type(main_of_fen[3][0]))
         board_of_fen = main_of_fen[0].split('/')
         for i in range(len(self.board)):
             for j in range(8):
@@ -83,12 +85,12 @@ class Chess:
                             self.board[i][j1] = board_of_fen[i][f]
                             if self.board[i][j1].isupper():
                                 if self.board[i][j1] == 'K':
-                                    self.position.cord_of_white_king = Coord(i, j1)
+                                    self.position.coord_of_white_king = Coord(i, j1)
                                 self.position.white_figures.append(Figure(
                                     self.from_symbol_to_figure_type(self.board[i][j1]), Color.white, Coord(i, j1)))
                             else:
                                 if self.board[i][j1] == 'k':
-                                    self.position.cord_of_black_king = Coord(i, j1)
+                                    self.position.coord_of_black_king = Coord(i, j1)
                                 self.position.black_figures.append(
                                     Figure(self.from_symbol_to_figure_type(self.board[i][j1]), Color.black,
                                            Coord(i, j1)))
@@ -104,9 +106,19 @@ class Chess:
                          'R': FigureType.rook, 'r': FigureType.rook, 'P': FigureType.pawn, 'p': FigureType.pawn}
         return transformator[string]
 
+    def from_letter_to_coord_type(self, letter: str) -> int:
+        transformator = {
+            'a': 0, 'b': 1, 'c': 2, 'd': 3,
+            'e': 4, 'f': 5, 'g': 6, 'h': 7
+        }
+        return transformator[letter]
+
 
 if __name__ == '__main__':
-    fen = '8/5k2/8/8/3Q4/8/8/3K4 w - - 0 1'
+    fen = 'k7/8/8/8/3pP3/8/8/K7 w - e3 0 1'
     check_board = Chess(fen)
+    check_board.show_board()
     check_board.position.generate_general_moves()
-    check_board.show_moves()
+    # for fig in check_board.position.black_figures:
+    #     print(fig.moves)
+    # # check_board.show_moves()

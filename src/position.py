@@ -10,20 +10,23 @@ class Position:
 
     def __init__(self) -> None:
         """Инициализирует поля объекта значениями по умолчанию."""
-        self.cord_of_white_king: Coord | None = None
-        self.cord_of_black_king: Coord | None = None
+        self.coord_of_white_king: Coord | None = None
+        self.coord_of_black_king: Coord | None = None
         self.white_figures: list[Figure] = []
         self.black_figures: list[Figure] = []
         self.board: list[list[str]] = []
+        self.coord_of_en_passant: Coord | None = None
+        self.order_of_move: str = 'w'
+        self.is_mate: bool = True
 
     def check_to_king(self, color_of_king: Color) -> bool:
         if color_of_king == Color.white:
             my_case = True
-            coord_of_king = self.cord_of_white_king
+            coord_of_king = self.coord_of_white_king
 
         else:
             my_case = False
-            coord_of_king = self.cord_of_black_king
+            coord_of_king = self.coord_of_black_king
 
         # rook/queen
         for x in range(coord_of_king.x + 1, 8):
@@ -164,8 +167,14 @@ class Position:
 
     def generate_general_moves(self) -> None:
         """Перебор всех белых и черных фигур, вызов метод generate_moves() для каждой фигуры."""
-        for white_figure in self.white_figures:
-            white_figure.generate_moves(self.cord_of_white_king, self.board)
+        if self.order_of_move == 'w':
+            for white_figure in self.white_figures:
+                white_figure.generate_moves(self.coord_of_white_king, self.coord_of_en_passant, self.board)
+                if white_figure.moves:
+                    self.is_mate = False
 
-        for black_figure in self.black_figures:
-            black_figure.generate_moves(self.cord_of_black_king, self.board)
+        else:
+            for black_figure in self.black_figures:
+                black_figure.generate_moves(self.coord_of_black_king, self.coord_of_en_passant, self.board)
+                if black_figure.moves:
+                    self.is_mate = False

@@ -23,3 +23,12 @@ class Coord:
 
     def __eq__(self, other: 'Coord') -> bool:
         return self.x == other.x and self.y == other.y
+
+
+class CoordWithTransform(Coord):
+    def __init__(self, y: int, x: int, figure: str) -> None:
+        super().__init__(y, x)
+        self.figure: str = figure
+
+    def __repr__(self) -> str:
+        return f'{self.figure}({self.x}, {self.y})'

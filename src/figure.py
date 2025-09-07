@@ -1,6 +1,6 @@
 """Модуль, который содержит реализацию класса Figure."""
 
-from src.coord import Coord
+from src.coord import Coord, CoordWithTransform
 from src.enums import Color, FigureType
 
 
@@ -20,7 +20,7 @@ class Figure:
         self.coord: Coord = coord
         self.moves: list[Coord] = []
 
-    def generate_moves(self, coord_of_king: Coord, board: list[list[str]]) -> None:
+    def generate_moves(self, coord_of_king: Coord, coord_of_en_passant: Coord, board: list[list[str]]) -> None:
         """Генерация ходов фигуры
 
         Args:
@@ -35,7 +35,7 @@ class Figure:
         # rook and queen
         if self.type == FigureType.rook or self.type == FigureType.queen:
 
-            """Перебор для ладьи вправо"""
+            """Перебор для королевы и ладьи вправо"""
 
             for x in range(self.coord.x + 1, 8):
                 cell = board[self.coord.y][x]
@@ -71,7 +71,7 @@ class Figure:
                     else:
                         board[self.coord.y][self.coord.x] = 'R' if self.color == Color.white else 'r'
 
-            """Перебор для ладьи влево"""
+            """Перебор для  королевы и ладьи влево"""
 
             for minus_x in range(self.coord.x - 1, -1, -1):
                 cell = board[self.coord.y][minus_x]
@@ -107,7 +107,7 @@ class Figure:
                     else:
                         board[self.coord.y][self.coord.x] = 'R' if self.color == Color.white else 'r'
 
-            """Перебор для ладьи вниз"""
+            """Перебор для королевы и ладьи вниз"""
 
             for y in range(self.coord.y + 1, 8):
                 cell = board[y][self.coord.x]
@@ -143,7 +143,7 @@ class Figure:
                     else:
                         board[self.coord.y][self.coord.x] = 'R' if self.color == Color.white else 'r'
 
-            """Перебор для ладьи вверх"""
+            """Перебор для королевы и ладьи вверх"""
 
             for minus_y in range(self.coord.y - 1, -1, -1):
                 cell = board[minus_y][self.coord.x]
@@ -183,7 +183,7 @@ class Figure:
         # bishop and queen
         if self.type == FigureType.bishop or self.type == FigureType.queen:
 
-            """Перебор для слона вправо вниз"""
+            """Перебор для королевы ислона вправо вниз"""
 
             for shift in range(1, min(7 - self.coord.x, 7 - self.coord.y) + 1):
                 cell = board[self.coord.y + shift][self.coord.x + shift]
@@ -221,7 +221,7 @@ class Figure:
                     else:
                         board[self.coord.y][self.coord.x] = 'B' if self.color == Color.white else 'b'
 
-            """Перебор для слона вправо вверх"""
+            """Перебор для королевы и слона вправо вверх"""
 
             for shift in range(1, min(7 - self.coord.x, self.coord.y) + 1):
                 cell = board[self.coord.y - shift][self.coord.x + shift]
@@ -239,7 +239,7 @@ class Figure:
                                 self.coord.x + shift] = 'B' if self.color == Color.white else 'b'
                         if not self.check_to_king(self.color, coord_of_king, board):
                             self.moves.append(Coord(self.coord.y - shift, self.coord.x + shift))
-                        board[self.coord.y + shift][self.coord.x + shift] = fig
+                        board[self.coord.y - shift][self.coord.x + shift] = fig
                         if self.type == FigureType.queen:
                             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
                         else:
@@ -261,7 +261,7 @@ class Figure:
                     else:
                         board[self.coord.y][self.coord.x] = 'B' if self.color == Color.white else 'B'
 
-            """Перебор для слона влево вниз"""
+            """Перебор для королевы и слона влево вниз"""
 
             for shift in range(1, min(self.coord.x, 7 - self.coord.y) + 1):
                 cell = board[self.coord.y + shift][self.coord.x - shift]
@@ -299,7 +299,7 @@ class Figure:
                     else:
                         board[self.coord.y][self.coord.x] = 'B' if self.color == Color.white else 'b'
 
-            """ Перебор для слона влево вверх"""
+            """ Перебор для  королевы и слона влево вверх"""
 
             for shift in range(1, min(self.coord.x, self.coord.y) + 1):
                 cell = board[self.coord.y - shift][self.coord.x - shift]
@@ -388,212 +388,6 @@ class Figure:
                         board[self.coord.y + dy][self.coord.x + dx] = ''
                         board[self.coord.y][self.coord.x] = 'K' if self.color == Color.white else 'k'
 
-        # # queen
-        # elif self.type == FigureType.queen:
-        #     for shift in range(1, min(7 - self.coord.x, 7 - self.coord.y) + 1):
-        #         cell = board[self.coord.y + shift][self.coord.x + shift]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[self.coord.y + shift][self.coord.x + shift]
-        #                 board[self.coord.y + shift][
-        #                     self.coord.x + shift] = 'Q' if self.color == Color.white else 'q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(self.coord.y + shift, self.coord.x + shift))
-        #                 board[self.coord.y + shift][self.coord.x + shift] = fig
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             board[self.coord.y + shift][self.coord.x + shift] = 'Q' if self.color == Color.white else 'q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(self.coord.y + shift, self.coord.x + shift))
-        #             board[self.coord.y + shift][self.coord.x + shift] = ''
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #
-        #     for shift in range(1, min(7 - self.coord.x, self.coord.y) + 1):
-        #         cell = board[self.coord.y - shift][self.coord.x + shift]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[self.coord.y - shift][self.coord.x + shift]
-        #                 board[self.coord.y - shift][
-        #                     self.coord.x + shift] = 'Q' if self.color == Color.white else 'q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(self.coord.y - shift, self.coord.x + shift))
-        #                 board[self.coord.y - shift][self.coord.x + shift] = fig
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             board[self.coord.y - shift][
-        #                 self.coord.x + shift] = 'Q' if self.color == Color.white else 'q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(self.coord.y - shift, self.coord.x + shift))
-        #             board[self.coord.y - shift][self.coord.x + shift] = ''
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #
-        #     for shift in range(1, min(self.coord.x, 7 - self.coord.y) + 1):
-        #         cell = board[self.coord.y + shift][self.coord.x - shift]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[self.coord.y + shift][self.coord.x - shift]
-        #                 board[self.coord.y + shift][
-        #                     self.coord.x - shift] = 'Q' if self.color == Color.white else 'q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(self.coord.y + shift, self.coord.x - shift))
-        #                 board[self.coord.y + shift][self.coord.x - shift] = fig
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             board[self.coord.y + shift][self.coord.x - shift] = 'Q' if self.color == Color.white else 'q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(self.coord.y + shift, self.coord.x - shift))
-        #             board[self.coord.y + shift][self.coord.x - shift] = ''
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #
-        #     for shift in range(1, min(self.coord.x, self.coord.y) + 1):
-        #         cell = board[self.coord.y - shift][self.coord.x - shift]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[self.coord.y - shift][self.coord.x - shift]
-        #                 board[self.coord.y - shift][
-        #                     self.coord.x - shift] = 'Q' if self.color == Color.white else 'q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(self.coord.y - shift, self.coord.x - shift))
-        #                 board[self.coord.y - shift][self.coord.x - shift] = fig
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             board[self.coord.y - shift][self.coord.x - shift] = 'Q' if self.color == Color.white else 'q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(self.coord.y - shift, self.coord.x - shift))
-        #             board[self.coord.y - shift][self.coord.x - shift] = ''
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #
-        #     for x in range(self.coord.x + 1, 8):
-        #         cell = board[self.coord.y][x]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[self.coord.y][x]
-        #                 # if self.type == FigureType.queen:
-        #                 #     board[self.coord.y][x] = 'Q' if self.color == Color.white else 'q'
-        #                 # else:
-        #                 board[self.coord.y][x] = 'Q' if self.color == Color.white else 'Q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(self.coord.y, x))
-        #                 board[self.coord.y][x] = fig
-        #                 # if self.type == FigureType.queen:
-        #                 #     board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #                 # else:
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             # if self.type == FigureType.queen:
-        #             #     board[self.coord.y][x] = 'Q' if self.color == Color.white else 'q'
-        #             # else:
-        #             board[self.coord.y][x] = 'Q' if self.color == Color.white else 'Q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(self.coord.y, x))
-        #             board[self.coord.y][x] = ''
-        #             # if self.type == FigureType.queen:
-        #             #     board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #             # else:
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #     #q
-        #     for minus_x in range(self.coord.x - 1, -1, -1):
-        #         cell = board[self.coord.y][minus_x]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[self.coord.y][minus_x]
-        #                 # if self.type == FigureType.queen:
-        #                 #     board[self.coord.y][minus_x] = 'Q' if self.color == Color.white else 'q'
-        #                 # else:
-        #                 board[self.coord.y][minus_x] = 'Q' if self.color == Color.white else 'Q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(self.coord.y, minus_x))
-        #                 board[self.coord.y][minus_x] = fig
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             board[self.coord.y][minus_x] = 'Q' if self.color == Color.white else 'Q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(self.coord.y, minus_x))
-        #             board[self.coord.y][minus_x] = ''
-        #             # if self.type == FigureType.queen:
-        #             #     board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #             # else:
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #
-        #     for y in range(self.coord.y + 1, 8):
-        #         cell = board[y][self.coord.x]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[y][self.coord.x]
-        #                 # if self.type == FigureType.queen:
-        #                 #     board[y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #                 # else:
-        #                 board[y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(y, self.coord.x))
-        #                 board[y][self.coord.x] = fig
-        #                 # if self.type == FigureType.queen:
-        #                 #     board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-        #                 # else:
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             board[y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(y, self.coord.x))
-        #             board[y][self.coord.x] = ''
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #
-        #     for minus_y in range(self.coord.y - 1, -1, -1):
-        #         cell = board[minus_y][self.coord.x]
-        #         if cell != '':
-        #             if cell.isupper() == my_case:
-        #                 break
-        #             else:
-        #                 board[self.coord.y][self.coord.x] = ''
-        #                 fig = board[minus_y][self.coord.x]
-        #                 board[minus_y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #                 if not self.check_to_king(self.color, coord_of_king, board):
-        #                     self.moves.append(Coord(minus_y, self.coord.x))
-        #                 board[minus_y][self.coord.x] = fig
-        #                 board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #                 break
-        #         else:
-        #             board[self.coord.y][self.coord.x] = ''
-        #             board[minus_y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
-        #             if not self.check_to_king(self.color, coord_of_king, board):
-        #                 self.moves.append(Coord(minus_y, self.coord.x))
-        #             board[minus_y][self.coord.x] = ''
-        #             board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'Q'
 
         # pawn
         elif self.type == FigureType.pawn:
@@ -609,9 +403,28 @@ class Figure:
                                 board[self.coord.y + dy][
                                     self.coord.x + dx] = 'P'
                                 if not self.check_to_king(self.color, coord_of_king, board):
-                                    self.moves.append(Coord(self.coord.y + dy, self.coord.x + dx))
+                                    if self.coord.y + dy == 0:
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'Q'))
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'R'))
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'B'))
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'N'))
+                                    else:
+                                        self.moves.append(Coord(self.coord.y + dy, self.coord.x + dx))
+
                                 board[self.coord.y + dy][self.coord.x + dx] = fig
                                 board[self.coord.y][self.coord.x] = 'P'
+                        else:
+
+                            if coord_of_en_passant and coord_of_en_passant == Coord(self.coord.y + dy,
+                                                                                    self.coord.x + dx):
+                                board[self.coord.y][self.coord.x] = ''
+                                board[coord_of_en_passant.y][coord_of_en_passant.x] = 'P'
+                                board[coord_of_en_passant.y + 1][coord_of_en_passant.x] = ''
+                                if not self.check_to_king(self.color, coord_of_king, board):
+                                    self.moves.append(coord_of_en_passant)
+                                board[self.coord.y][self.coord.x] = 'P'
+                                board[coord_of_en_passant.y][coord_of_en_passant.x] = ''
+                                board[coord_of_en_passant.y + 1][coord_of_en_passant.x] = 'p'
 
                 cell = board[self.coord.y - 1][self.coord.x]
                 if cell == '':
@@ -619,7 +432,14 @@ class Figure:
                     board[self.coord.y - 1][
                         self.coord.x] = 'P'
                     if not self.check_to_king(self.color, coord_of_king, board):
-                        self.moves.append(Coord(self.coord.y - 1, self.coord.x))
+                        if self.coord.y - 1 == 0:
+                            self.moves.append(CoordWithTransform(self.coord.y - 1, self.coord.x, 'Q'))
+                            self.moves.append(CoordWithTransform(self.coord.y - 1, self.coord.x, 'R'))
+                            self.moves.append(CoordWithTransform(self.coord.y - 1, self.coord.x, 'B'))
+                            self.moves.append(CoordWithTransform(self.coord.y - 1, self.coord.x, 'N'))
+                        else:
+                            self.moves.append(Coord(self.coord.y - 1, self.coord.x))
+
                     board[self.coord.y - 1][self.coord.x] = ''
                     board[self.coord.y][self.coord.x] = 'P'
 
@@ -645,9 +465,27 @@ class Figure:
                                 board[self.coord.y + dy][
                                     self.coord.x + dx] = 'p'
                                 if not self.check_to_king(self.color, coord_of_king, board):
-                                    self.moves.append(Coord(self.coord.y + dy, self.coord.x + dx))
+                                    if self.coord.y + dy == 7:
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'q'))
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'r'))
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'b'))
+                                        self.moves.append(CoordWithTransform(self.coord.y + dy, self.coord.x + dx, 'n'))
+                                    else:
+                                        self.moves.append(Coord(self.coord.y + dy, self.coord.x + dx))
+
                                 board[self.coord.y + dy][self.coord.x + dx] = fig
                                 board[self.coord.y][self.coord.x] = 'p'
+                        else:
+                            if coord_of_en_passant and\
+                                    coord_of_en_passant == Coord(self.coord.y + dy, self.coord.x + dx):
+                                board[self.coord.y][self.coord.x] = ''
+                                board[coord_of_en_passant.y][coord_of_en_passant.x] = 'p'
+                                board[coord_of_en_passant.y - 1][coord_of_en_passant.x] = ''
+                                if not self.check_to_king(self.color, coord_of_king, board):
+                                    self.moves.append(coord_of_en_passant)
+                                board[self.coord.y][self.coord.x] = 'p'
+                                board[coord_of_en_passant.y][coord_of_en_passant.x] = ''
+                                board[coord_of_en_passant.y - 1][coord_of_en_passant.x] = 'P'
 
                 cell = board[self.coord.y + 1][self.coord.x]
                 if cell == '':
@@ -655,7 +493,13 @@ class Figure:
                     board[self.coord.y + 1][
                         self.coord.x] = 'p'
                     if not self.check_to_king(self.color, coord_of_king, board):
-                        self.moves.append(Coord(self.coord.y + 1, self.coord.x))
+                        if self.coord.y + 1 == 7:
+                            self.moves.append(CoordWithTransform(self.coord.y + 1, self.coord.x, 'q'))
+                            self.moves.append(CoordWithTransform(self.coord.y + 1, self.coord.x, 'r'))
+                            self.moves.append(CoordWithTransform(self.coord.y + 1, self.coord.x, 'b'))
+                            self.moves.append(CoordWithTransform(self.coord.y + 1, self.coord.x, 'n'))
+                        else:
+                            self.moves.append(Coord(self.coord.y + 1, self.coord.x))
                     board[self.coord.y + 1][self.coord.x] = ''
                     board[self.coord.y][self.coord.x] = 'p'
 
@@ -667,7 +511,6 @@ class Figure:
                             if not self.check_to_king(self.color, coord_of_king, board):
                                 self.moves.append(Coord(self.coord.y + 2, self.coord.x))
                             board[self.coord.y + 2][self.coord.x] = ''
-                            board[self.coord.y][self.coord.x] = 'p'
 
         # black pawn
 
@@ -810,3 +653,20 @@ class Figure:
                         return True
 
         return False
+
+    # def pass_pawn(self, new_fig: str, coord_of_king: Coord, board: list[list[str]]):
+    #     new_fig = new_fig.upper()
+    #     if new_fig == 'Q':
+    #         self.type = FigureType.queen
+    #         board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
+    #     elif new_fig == 'R':
+    #         self.type = FigureType.rook
+    #         board[self.coord.y][self.coord.x] = 'R' if self.color == Color.white else 'r'
+    #     elif new_fig == 'B':
+    #         self.type == FigureType.bishop
+    #         board[self.coord.y][self.coord.x] = 'B' if self.color == Color.white else 'b'
+    #     elif new_fig == 'N':
+    #         self.type == FigureType.knight
+    #         board[self.coord.y][self.coord.x] = 'N' if self.color == Color.white else 'n'
+    #     self.moves = []
+    #     self.generate_moves(coord_of_king, board)
