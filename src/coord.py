@@ -25,6 +25,17 @@ class Coord:
         return self.x == other.x and self.y == other.y
 
 
+class CoordWithCastling(Coord):
+    """Реализация шахматных координат."""
+
+    def __repr__(self) -> str:
+        return f'({self.x}, {self.y}, Castling)'
+
+    def __eq__(self, other: 'Coord') -> bool:
+        return self.x == other.x and self.y == other.y
+
+
+
 class CoordWithTransform(Coord):
     def __init__(self, y: int, x: int, figure: str) -> None:
         super().__init__(y, x)

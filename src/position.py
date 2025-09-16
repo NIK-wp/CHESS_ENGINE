@@ -169,12 +169,12 @@ class Position:
         """Перебор всех белых и черных фигур, вызов метод generate_moves() для каждой фигуры."""
         if self.order_of_move == 'w':
             for white_figure in self.white_figures:
-                white_figure.generate_moves(self.coord_of_white_king, self.coord_of_en_passant, self.board)
+                white_figure.generate_moves(self.coord_of_white_king, self.coord_of_en_passant, self.board, True, True)
                 if white_figure.moves:
                     self.is_mate = False
 
         else:
             for black_figure in self.black_figures:
-                black_figure.generate_moves(self.coord_of_black_king, self.coord_of_en_passant, self.board)
+                black_figure.generate_moves(self.coord_of_black_king, self.coord_of_en_passant, self.board, True, True)
                 if black_figure.moves:
                     self.is_mate = False

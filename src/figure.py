@@ -1,6 +1,6 @@
 """Модуль, который содержит реализацию класса Figure."""
 
-from src.coord import Coord, CoordWithTransform
+from src.coord import Coord, CoordWithTransform, CoordWithCastling
 from src.enums import Color, FigureType
 
 
@@ -20,7 +20,8 @@ class Figure:
         self.coord: Coord = coord
         self.moves: list[Coord] = []
 
-    def generate_moves(self, coord_of_king: Coord, coord_of_en_passant: Coord, board: list[list[str]]) -> None:
+    def generate_moves(self, coord_of_king: Coord, coord_of_en_passant: Coord, board: list[list[str]],
+                       castle_kingside: bool = False, castle_queenside: bool = False) -> None:
         """Генерация ходов фигуры
 
         Args:
@@ -179,7 +180,6 @@ class Figure:
                         board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
                     else:
                         board[self.coord.y][self.coord.x] = 'R' if self.color == Color.white else 'r'
-
         # bishop and queen
         if self.type == FigureType.bishop or self.type == FigureType.queen:
 
@@ -338,8 +338,6 @@ class Figure:
                         board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
                     else:
                         board[self.coord.y][self.coord.x] = 'B' if self.color == Color.white else 'b'
-
-
         # knight
         elif self.type == FigureType.knight:
             for dx, dy in ((1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (-2, 1), (2, -1), (-2, -1)):
@@ -363,7 +361,6 @@ class Figure:
                             self.moves.append(Coord(self.coord.y + dy, self.coord.x + dx))
                         board[self.coord.y + dy][self.coord.x + dx] = ''
                         board[self.coord.y][self.coord.x] = 'N' if self.color == Color.white else 'n'
-
         # king
         elif self.type == FigureType.king:
             for dx, dy in ((1, 1), (-1, -1), (-1, 1), (1, -1), (0, 1), (0, -1), (1, 0), (-1, 0)):
@@ -387,8 +384,32 @@ class Figure:
                             self.moves.append(Coord(self.coord.y + dy, self.coord.x + dx))
                         board[self.coord.y + dy][self.coord.x + dx] = ''
                         board[self.coord.y][self.coord.x] = 'K' if self.color == Color.white else 'k'
-
-
+            if castle_kingside:
+                if board[self.coord.y][self.coord.x + 1] == '' and board[self.coord.y][self.coord.x + 2] == '':
+                    safe = True
+                    for dx in (0, 1, 2):
+                        board[self.coord.y][self.coord.x] = ''
+                        board[self.coord.y][self.coord.x + dx] = 'K' if self.color == Color.white else 'k'
+                        if self.check_to_king(self.color, Coord(self.coord.y, self.coord.x + dx), board):
+                            safe = False
+                        board[self.coord.y][self.coord.x + dx] = ''
+                        board[self.coord.y][self.coord.x] = 'K' if self.color == Color.white else 'k'
+                    if safe:
+                        self.moves.append(CoordWithCastling(self.coord.y, self.coord.x + 2))
+            if castle_queenside:
+                if (board[self.coord.y][self.coord.x - 1] == '' and
+                        board[self.coord.y][self.coord.x - 2] == '' and
+                        board[self.coord.y][self.coord.x - 3] == ''):
+                    safe = True
+                    for dx in (0, -1, -2):
+                        board[self.coord.y][self.coord.x] = ''
+                        board[self.coord.y][self.coord.x + dx] = 'K' if self.color == Color.white else 'k'
+                        if self.check_to_king(self.color, Coord(self.coord.y, self.coord.x + dx), board):
+                            safe = False
+                        board[self.coord.y][self.coord.x + dx] = ''
+                        board[self.coord.y][self.coord.x] = 'K' if self.color == Color.white else 'k'
+                    if safe:
+                        self.moves.append(CoordWithCastling(self.coord.y, self.coord.x - 2))
         # pawn
         elif self.type == FigureType.pawn:
             # white
@@ -476,7 +497,7 @@ class Figure:
                                 board[self.coord.y + dy][self.coord.x + dx] = fig
                                 board[self.coord.y][self.coord.x] = 'p'
                         else:
-                            if coord_of_en_passant and\
+                            if coord_of_en_passant and \
                                     coord_of_en_passant == Coord(self.coord.y + dy, self.coord.x + dx):
                                 board[self.coord.y][self.coord.x] = ''
                                 board[coord_of_en_passant.y][coord_of_en_passant.x] = 'p'
