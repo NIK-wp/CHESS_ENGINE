@@ -534,8 +534,8 @@ class Figure:
                             board[self.coord.y + 2][self.coord.x] = ''
 
         # black pawn
-
-    def check_to_king(self, color_of_king: Color, coord_of_king: Coord, board: list[list[str]]) -> bool:
+    @staticmethod
+    def check_to_king(color_of_king: Color, coord_of_king: Coord, board: list[list[str]]) -> bool:
         if color_of_king == Color.white:
             my_case = True
         else:

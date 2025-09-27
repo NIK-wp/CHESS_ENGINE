@@ -2,6 +2,7 @@ import pytest
 
 from src.chess import Chess
 from src.enums import Color
+from src.figure import Figure
 
 
 class TestPosition:
@@ -27,6 +28,8 @@ class TestPosition:
     def test_function_check_to_king_rook_or_queen_with_check(self, fen: str, color: Color,
                                                              comment: str) -> None:
         chess = Chess(fen)
+        coord_of_king = chess.position.coord_of_white_king if color is Color.white else chess.position.coord_of_black_king
+        assert Figure.check_to_king(color, coord_of_king, chess.position.board), comment
 
         assert chess.position.check_to_king(color), comment
 
