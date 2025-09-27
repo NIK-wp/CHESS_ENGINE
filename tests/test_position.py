@@ -10,6 +10,7 @@ class TestPosition:
     # check_board = Chess(fen)
     # check_board.show_board()
     # check_board.position.check_to_king(Color.white)
+
     @pytest.mark.parametrize(
         'fen, color, comment',
         [
@@ -33,7 +34,6 @@ class TestPosition:
 
         assert chess.position.check_to_king(color), comment
 
-
     @pytest.mark.parametrize(
         'fen, color, comment',
         [
@@ -54,7 +54,6 @@ class TestPosition:
 
         assert not chess.position.check_to_king(color), comment
 
-
     @pytest.mark.parametrize(
         'fen, color, comment',
         [
@@ -74,7 +73,6 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -112,7 +110,6 @@ class TestPosition:
 
         assert chess.position.check_to_king(color), comment
 
-
     @pytest.mark.parametrize(
         'fen, color, comment',
         [
@@ -130,7 +127,6 @@ class TestPosition:
 
         assert not chess.position.check_to_king(color), comment
 
-
     @pytest.mark.parametrize(
         'fen, color, comment',
         [
@@ -143,7 +139,6 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -161,7 +156,6 @@ class TestPosition:
 
         assert not chess.position.check_to_king(color), comment
 
-
     @pytest.mark.parametrize(
         'fen, color, comment',
         [
@@ -174,7 +168,6 @@ class TestPosition:
         chess = Chess(fen)
 
         assert chess.position.check_to_king(color), comment
-
 
     @pytest.mark.parametrize(
         'fen, color, comment',
@@ -189,3 +182,16 @@ class TestPosition:
 
         assert not chess.position.check_to_king(color), comment
 
+    @pytest.mark.parametrize(
+        'fen, ans, comment',
+        [
+            ('8/8/8/5PK1/8/k7/8/3r4 b - - 0 1', -4, '1 get_mark_of_position'),
+            ('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', 0, '2 get_mark_of_position'),
+            ('8/k1qrbn2/8/8/8/8/K1QRBNP1/8 w - - 0 1', 1, '3 get_mark_of_position'),
+            ('8/8/8/5PK1/8/k7/8/8 b - - 0 1', 1, '4 get_mark_of_position')
+
+        ]
+    )
+    def test_function_get_mark_of_position(self, fen: str, ans: int, comment: str):
+        check_board = Chess(fen)
+        assert check_board.position.get_mark_of_position() == ans, comment

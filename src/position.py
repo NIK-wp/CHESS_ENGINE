@@ -1,7 +1,7 @@
 """Модуль, содержащий реализацию класса Position."""
 
 from src.coord import Coord
-from src.enums import Color
+from src.enums import Color, FigureType
 from src.figure import Figure
 
 
@@ -16,8 +16,29 @@ class Position:
         self.black_figures: list[Figure] = []
         self.board: list[list[str]] = []
         self.coord_of_en_passant: Coord | None = None
+        self.castling: dict = {}
         self.order_of_move: str = 'w'
         self.is_mate: bool = True
+
+    def filling_in_the_castling_parameters(self, fig: FigureType, color: Color) -> bool:
+        if fig == FigureType.king and color == Color.white:
+            return self.castling.get('K', False)
+        elif fig == FigureType.king and color == Color.black:
+            return self.castling.get('k', False)
+        elif fig == FigureType.queen and color == Color.white:
+            return self.castling.get('Q', False)
+        elif fig == FigureType.queen and color == Color.black:
+            return self.castling.get('q', False)
+
+    def get_mark_of_position(self):
+        costs = {FigureType.pawn: 1, FigureType.knight: 3, FigureType.bishop: 3, FigureType.rook: 5,
+                 FigureType.queen: 9, FigureType.king: 0}
+        score = 0
+        for white_figure in self.white_figures:
+            score += costs[white_figure.type]
+        for black_figure in self.black_figures:
+            score -= costs[black_figure.type]
+        return score
 
     def check_to_king(self, color_of_king: Color) -> bool:
         if color_of_king == Color.white:
@@ -169,12 +190,16 @@ class Position:
         """Перебор всех белых и черных фигур, вызов метод generate_moves() для каждой фигуры."""
         if self.order_of_move == 'w':
             for white_figure in self.white_figures:
-                white_figure.generate_moves(self.coord_of_white_king, self.coord_of_en_passant, self.board, True, True)
-                if white_figure.moves:
-                    self.is_mate = False
+                white_figure.generate_moves(self.coord_of_white_king, self.coord_of_en_passant, self.board,
+                                            self.filling_in_the_castling_parameters(FigureType.king, Color.white),
+                                            self.filling_in_the_castling_parameters(FigureType.queen, Color.white))
+                # if white_figure.moves:
+                #     self.is_mate = False
 
         else:
             for black_figure in self.black_figures:
-                black_figure.generate_moves(self.coord_of_black_king, self.coord_of_en_passant, self.board, True, True)
-                if black_figure.moves:
-                    self.is_mate = False
+                black_figure.generate_moves(self.coord_of_black_king, self.coord_of_en_passant, self.board,
+                                            self.filling_in_the_castling_parameters(FigureType.king, Color.black),
+                                            self.filling_in_the_castling_parameters(FigureType.queen, Color.black))
+                # if black_figure.moves:
+                #     self.is_mate = False

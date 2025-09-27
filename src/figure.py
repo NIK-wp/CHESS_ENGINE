@@ -27,6 +27,11 @@ class Figure:
         Args:
             coord_of_king(Coord): Координата короля данного цвета фигуры;
             board(list[list[str]]): шахматная доска;
+            :param castle_queenside:
+            :param coord_of_king:
+            :param castle_kingside:
+            :param board:
+            :param coord_of_en_passant:
         """
         if self.color == Color.white:
             my_case = True
@@ -532,6 +537,7 @@ class Figure:
                             if not self.check_to_king(self.color, coord_of_king, board):
                                 self.moves.append(Coord(self.coord.y + 2, self.coord.x))
                             board[self.coord.y + 2][self.coord.x] = ''
+                            board[self.coord.y][self.coord.x] = 'p'
 
         # black pawn
     @staticmethod
@@ -675,19 +681,3 @@ class Figure:
 
         return False
 
-    # def pass_pawn(self, new_fig: str, coord_of_king: Coord, board: list[list[str]]):
-    #     new_fig = new_fig.upper()
-    #     if new_fig == 'Q':
-    #         self.type = FigureType.queen
-    #         board[self.coord.y][self.coord.x] = 'Q' if self.color == Color.white else 'q'
-    #     elif new_fig == 'R':
-    #         self.type = FigureType.rook
-    #         board[self.coord.y][self.coord.x] = 'R' if self.color == Color.white else 'r'
-    #     elif new_fig == 'B':
-    #         self.type == FigureType.bishop
-    #         board[self.coord.y][self.coord.x] = 'B' if self.color == Color.white else 'b'
-    #     elif new_fig == 'N':
-    #         self.type == FigureType.knight
-    #         board[self.coord.y][self.coord.x] = 'N' if self.color == Color.white else 'n'
-    #     self.moves = []
-    #     self.generate_moves(coord_of_king, board)

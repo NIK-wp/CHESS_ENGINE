@@ -90,9 +90,8 @@ class ChessGUI:
 
 
 if __name__ == "__main__":
-    fen = "8/3N1PQ1/1R6/8/8/8/5kq1/7K w - - 0 1"
+    fen = "3rk2r/ppp1pppp/8/8/8/8/PPP1PPPP/R3K2R w KQk - 0 1"
     chess = Chess(fen)
     chess.position.generate_general_moves()
-    print(chess.position.is_mate)
     gui = ChessGUI(chess)
     gui.run()

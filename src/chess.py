@@ -1,6 +1,6 @@
 """Модуль, содержащий реализацию класса Chess."""
 
-import hashlib
+# import hashlib
 
 from src.coord import Coord
 from src.enums import Color, FigureType
@@ -19,10 +19,10 @@ class Chess:
         """
         self.board: list[list[str]] = [['' for _ in range(8)] for _ in range(8)]
         self.order_of_move: str = 'w'
-        self.castling: dict = {}
         self.full_move_number: int = 0
         self.half_move_clock: int = 0
         self.position: Position = Position()
+
         self.parse_fen(fen)
         self.position.board = self.board
         self.position.order_of_move = self.order_of_move
@@ -71,8 +71,15 @@ class Chess:
             fen(str): Нотация Форсайта — Эдвардса. Строка, которая кодирует позицию на доске.
         """
         main_of_fen = fen.split()
+        if main_of_fen[1] != '-':
+            self.order_of_move = main_of_fen[1]
+        if main_of_fen[2] != '-':
+            for letter in main_of_fen[2]:
+                self.position.castling[letter] = True
         if main_of_fen[3] != '-':
-            self.position.coord_of_en_passant = Coord(7 - int(main_of_fen[3][1]) + 1, self.from_letter_to_coord_type(main_of_fen[3][0]))
+            self.position.coord_of_en_passant = Coord(7 - int(main_of_fen[3][1]) + 1,
+                                                      self.from_letter_to_coord_type(main_of_fen[3][0]))
+
         board_of_fen = main_of_fen[0].split('/')
         for i in range(len(self.board)):
             for j in range(8):
@@ -115,10 +122,14 @@ class Chess:
 
 
 if __name__ == '__main__':
-    fen = 'k7/8/8/8/3pP3/8/8/K7 w - e3 0 1'
+    fen = 'r2qk2r/pppppppp/8/8/8/8/PPPPPPPP/R2QK2R b KQkq - 0 1'
     check_board = Chess(fen)
-    check_board.show_board()
     check_board.position.generate_general_moves()
-    # for fig in check_board.position.black_figures:
-    #     print(fig.moves)
-    # # check_board.show_moves()
+    check_board.show_moves()
+
+# Start Position(white) - 2.315733699972043
+# Start Position(black) - 2.372777100012172
+# Middle-game('rnbqkb1r/pp2pppp/5n2/3p4/2PP4/2N5/PP3PPP/R1BQKBNR w KQkq - 0 1') - 3.8795937999966554
+# Middle-game('rnbqkb1r/pp2pppp/5n2/3p4/2PP4/2N5/PP3PPP/R1BQKBNR b KQkq - 0 1') - 3.8126058999914676
+# The endgame('8/8/8/5PK1/8/k7/8/3r4 w - - 0 1') - 0.9383183000027202
+# The endgame('8/8/8/5PK1/8/k7/8/3r4 b - - 0 1') - 0.9392350999987684
