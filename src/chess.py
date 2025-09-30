@@ -11,7 +11,7 @@ from src.position import Position
 class Chess:
     """Базовый класс для визуализации и логики шахмат."""
 
-    def __init__(self, fen: str) -> None:
+    def __init__(self, fen: str = None) -> None:
         """Иницилизирует поля класса.
 
         Args:
@@ -19,13 +19,14 @@ class Chess:
         """
         self.board: list[list[str]] = [['' for _ in range(8)] for _ in range(8)]
         self.order_of_move: str = 'w'
-        self.full_move_number: int = 0
+        self.full_move_number: int = 1
         self.half_move_clock: int = 0
         self.position: Position = Position()
 
-        self.parse_fen(fen)
-        self.position.board = self.board
-        self.position.order_of_move = self.order_of_move
+        if fen:
+            self.parse_fen(fen)
+            self.position.board = self.board
+            self.position.order_of_move = self.order_of_move
 
     def show_board(self) -> None:
         """Визуализация шахматной доски."""
@@ -77,8 +78,10 @@ class Chess:
             for letter in main_of_fen[2]:
                 self.position.castling[letter] = True
         if main_of_fen[3] != '-':
+            print(main_of_fen)
             self.position.coord_of_en_passant = Coord(7 - int(main_of_fen[3][1]) + 1,
                                                       self.from_letter_to_coord_type(main_of_fen[3][0]))
+
 
         board_of_fen = main_of_fen[0].split('/')
         for i in range(len(self.board)):
@@ -106,6 +109,43 @@ class Chess:
                             j1 += int(board_of_fen[i][f])
                     break
 
+    def generate_fen(self) -> str:
+        fen = ''
+        counter = 0
+        for line in self.board:
+            for cell in line:
+                if cell != '':
+                    if counter == 0:
+                        fen += cell
+                    else:
+                        fen += str(counter) + cell
+                    counter = 0
+                else:
+                    counter += 1
+            if counter != 0:
+                fen += str(counter)
+            fen += '/'
+            counter = 0
+        fen = fen[:-1]
+        fen += ' ' + self.order_of_move + ' '
+        flug = ''
+        for k in self.position.castling.keys():
+            if self.position.castling[k]:
+                flug += k
+        if flug:
+            fen += flug
+        else:
+            fen += '-'
+
+        if self.position.coord_of_en_passant:
+            fen += f' {self.from_coord_type_to_letter(self.position.coord_of_en_passant.x)}{8 - self.position.coord_of_en_passant.y}'
+        else:
+            fen += ' -'
+        fen += f' {self.half_move_clock} '
+        fen += f'{self.full_move_number}'
+
+        return fen
+
     @staticmethod
     def from_symbol_to_figure_type(string: str) -> FigureType:
         transformator = {'K': FigureType.king, 'k': FigureType.king, 'Q': FigureType.queen, 'q': FigureType.queen,
@@ -120,12 +160,20 @@ class Chess:
         }
         return transformator[letter]
 
+    def from_coord_type_to_letter(self, coord: int) -> str:
+        transformator = {
+            0: 'a', 1: 'b', 2: 'c', 3: 'd',
+            4: 'e', 5: 'f', 6: 'g', 7: 'h'
+        }
+        return transformator[coord]
+
 
 if __name__ == '__main__':
-    fen = 'r2qk2r/pppppppp/8/8/8/8/PPPPPPPP/R2QK2R b KQkq - 0 1'
+    fen = '8/5K1k/8/7R/8/8/8/8 b - - 0 1'
     check_board = Chess(fen)
     check_board.position.generate_general_moves()
     check_board.show_moves()
+    print(check_board.position.is_mate)
 
 # Start Position(white) - 2.315733699972043
 # Start Position(black) - 2.372777100012172

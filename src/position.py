@@ -193,13 +193,13 @@ class Position:
                 white_figure.generate_moves(self.coord_of_white_king, self.coord_of_en_passant, self.board,
                                             self.filling_in_the_castling_parameters(FigureType.king, Color.white),
                                             self.filling_in_the_castling_parameters(FigureType.queen, Color.white))
-                # if white_figure.moves:
-                #     self.is_mate = False
+                if white_figure.moves:
+                    self.is_mate = False
 
         else:
             for black_figure in self.black_figures:
                 black_figure.generate_moves(self.coord_of_black_king, self.coord_of_en_passant, self.board,
                                             self.filling_in_the_castling_parameters(FigureType.king, Color.black),
                                             self.filling_in_the_castling_parameters(FigureType.queen, Color.black))
-                # if black_figure.moves:
-                #     self.is_mate = False
+                if black_figure.moves:
+                    self.is_mate = False
