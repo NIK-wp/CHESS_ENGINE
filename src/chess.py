@@ -127,7 +127,8 @@ class Chess:
             fen += '/'
             counter = 0
         fen = fen[:-1]
-        fen += ' ' + self.order_of_move + ' '
+        # print(self.order_of_move)
+        fen += ' ' + self.position.order_of_move + ' '
         flug = ''
         for k in self.position.castling.keys():
             if self.position.castling[k]:

@@ -188,6 +188,7 @@ class Position:
 
     def generate_general_moves(self) -> None:
         """Перебор всех белых и черных фигур, вызов метод generate_moves() для каждой фигуры."""
+        # print(self.order_of_move)
         if self.order_of_move == 'w':
             for white_figure in self.white_figures:
                 white_figure.generate_moves(self.coord_of_white_king, self.coord_of_en_passant, self.board,
@@ -198,6 +199,7 @@ class Position:
 
         else:
             for black_figure in self.black_figures:
+
                 black_figure.generate_moves(self.coord_of_black_king, self.coord_of_en_passant, self.board,
                                             self.filling_in_the_castling_parameters(FigureType.king, Color.black),
                                             self.filling_in_the_castling_parameters(FigureType.queen, Color.black))
