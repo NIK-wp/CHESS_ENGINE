@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему</title>
+</head>
+<body>
+    <h1>Вход в систему</h1>
+
+    <form>
+        <div>
+            <label for="login">Логин:</label><br>
+            <input type="text" id="login" name="login">
+        </div>
+
+        <div>
+            <label for="password">Пароль:</label><br>
+            <input type="password" id="password" name="password">
+        </div>
+
+        <br>
+        <button onclick="sendLogin()" type="button">Войти</button>
+    </form>
+<script>
+    function sendLogin() {
+        const login = document.getElementById("login").value;
+        const password = document.getElementById("password").value;
+        // const message = document.getElementById("message");
+
+        // message.textContent = "";
+
+        fetch("/print_name_and_password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({login, password})
+        })
+            // .then(async response => {
+            //     const data = await response.json();
+            //
+            //     if (!response.ok) {
+            //         throw new Error(data.error);
+            //     }
+            //
+            //     return data;
+            // })
+            // .then(() => {
+            //     window.location.href = "/game";
+            // })
+            // .catch(err => {
+            //     message.style.color = "red";
+            //     message.textContent = err.message;
+            // });
+    }
+</script>
+</body>
+</html>
+

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Регистрация</h1>
+
+<input id="login" placeholder="login"><br><br>
+<input  id="password" placeholder="password"><br><br>
+<input id="password2" placeholder="repeat password">
+
+<button onclick="sendRegistration()">Зарегистрироваться</button>
+
+<script>
+    function sendRegistration() {
+        const login = document.getElementById("login").value;
+        const password = document.getElementById("password").value;
+        const password2 = document.getElementById("password2").value;
+
+        fetch("/registration", {
+            method: "POST",
+            headers: {Content-Tipe: "application/jsom"},
+            body: JSON.stringify({login, password, password2})
+        })
+    }
+
+</script>
+
+</body>
+</html>
