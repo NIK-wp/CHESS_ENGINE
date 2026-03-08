@@ -30,30 +30,42 @@
 
         // message.textContent = "";
 
-        fetch("/print_name_and_password", {
+
+        fetch("/input", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({login, password})
-        })
-            // .then(async response => {
-            //     const data = await response.json();
-            //
-            //     if (!response.ok) {
-            //         throw new Error(data.error);
-            //     }
-            //
-            //     return data;
-            // })
-            // .then(() => {
-            //     window.location.href = "/game";
-            // })
-            // .catch(err => {
-            //     message.style.color = "red";
-            //     message.textContent = err.message;
-            // });
+        }).then(response => {
+                if (response.status === 201) {
+                    window.location.href = '/game';
+                }
+            })
     }
+
+<!--        fetch("/print_name_and_password", {-->
+<!--            method: "POST",-->
+<!--            headers: {-->
+<!--                "Content-Type": "application/json"-->
+<!--            },-->
+<!--            body: JSON.stringify({login, password})-->
+<!--        })-->
+<!--            // .then(async response => {-->
+<!--            //     const data = await response.json();-->
+<!--            //-->
+<!--            //     if (!response.ok) {-->
+<!--            //         throw new Error(data.error);-->
+<!--            //     }-->
+<!--            //-->
+<!--            //     return data;-->
+<!--            // })-->
+<!--            // .then(() => {-->
+<!--            //     window.location.href = "/game";-->
+<!--            // })-->
+<!--            // .catch(err => {-->
+<!--            //     message.style.color = "red";-->
+<!--            //     message.textContent = err.message;-->
+<!--            // });-->
+<!--    }-->
 </script>
 </body>
 </html>

@@ -21,9 +21,13 @@
 
         fetch("/registration", {
             method: "POST",
-            headers: {Content-Tipe: "application/jsom"},
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({login, password, password2})
-        })
+        }).then(response => {
+                if (response.status === 201) {
+                    window.location.href = '/game';
+                }
+            })
     }
 
 </script>
