@@ -30,9 +30,9 @@ def insert_data(login: str, password: str) -> None:
     cursor.execute(
         f'''
             INSERT INTO users (login, password)
-            VALUES ('{login}', '{password}')
-        
-        '''
+            VALUES (?, ?)
+        ''',
+        (login, password)
     )
 
     connect.commit()
@@ -51,8 +51,9 @@ def is_exist(login: str) -> bool:
         f'''
             SELECT *
             FROM users
-            WHERE login = "{login}"
-        '''
+            WHERE login = ?
+        ''',
+        (login,)
     )
 
     rows = result.fetchall()
@@ -72,12 +73,11 @@ def select_password(login: str) -> str:
         f'''
             SELECT password
             FROM users
-            WHERE login = "{login}"
-        '''
+            WHERE login = ?
+        ''',
+        (login,)
     )
 
     rows = result.fetchall()
     connect.close()
     return rows[0]['password']
-
-

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | Шахматный движок</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Шахматный фон */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* Анимированные шахматные фигуры на фоне */
+        .chess-piece {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float 20s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.1;
+            }
+            90% {
+                opacity: 0.1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .register-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .chess-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            color: #999;
+            font-size: 18px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input:hover {
+            border-color: #764ba2;
+        }
+
+        /* Стили для поля с ошибкой */
+        input.error {
+            border-color: #c33;
+            background-color: #fff5f5;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .register-btn:active {
+            transform: translateY(0);
+        }
+
+        .register-btn.loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .register-btn.loading::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+            display: block;
+        }
+
+        .message.success {
+            background: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+            display: block;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .login-link p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        /* Специальный индикатор сложности пароля */
+        .password-strength {
+            margin-top: 8px;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e1e5e9;
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s ease, background 0.3s ease;
+            border-radius: 2px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 480px) {
+            .register-card {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .chess-icon {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Анимированные шахматные фигуры на фоне -->
+    <div class="chess-piece" style="left: 5%; animation-duration: 25s;">♔</div>
+    <div class="chess-piece" style="left: 15%; animation-duration: 30s; animation-delay: -5s;">♕</div>
+    <div class="chess-piece" style="left: 85%; animation-duration: 22s;">♖</div>
+    <div class="chess-piece" style="left: 75%; animation-duration: 28s; animation-delay: -10s;">♗</div>
+    <div class="chess-piece" style="left: 95%; animation-duration: 35s;">♘</div>
+    <div class="chess-piece" style="left: 45%; animation-duration: 27s; animation-delay: -3s;">♙</div>
+    <div class="chess-piece" style="left: 25%; animation-duration: 32s;">♚</div>
+    <div class="chess-piece" style="left: 65%; animation-duration: 24s; animation-delay: -8s;">♛</div>
+    <div class="chess-piece" style="left: 55%; animation-duration: 29s; animation-delay: -2s;">♝</div>
+    <div class="chess-piece" style="left: 35%; animation-duration: 26s;">♞</div>
+
+    <div class="container">
+        <div class="register-card">
+            <div class="header">
+                <div class="chess-icon">♝</div>
+                <h1>Создание аккаунта</h1>
+                <p class="subtitle">Присоединяйтесь к шахматному сообществу</p>
+            </div>
+
+            <form id="registerForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="login">Логин</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input
+                            type="text"
+                            id="login"
+                            name="login"
+                            placeholder="Придумайте логин"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Создайте пароль"
+                            autocomplete="new-password"
+                            required
+                        >
+                    </div>
+                    <div class="password-strength" id="passwordStrength">
+                        <span id="strengthText">Сложность пароля</span>
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password2">Подтверждение пароля</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">✓</span>
+                        <input
+                            type="password"
+                            id="password2"
+                            name="password2"
+                            placeholder="Повторите пароль"
+                            autocomplete="new-password"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <button
+                    class="register-btn"
+                    onclick="sendRegistration()"
+                    type="button"
+                    id="registerBtn"
+                >
+                    Зарегистрироваться
+                </button>
+
+                <div id="message" class="message"></div>
+            </form>
+
+            <div class="login-link">
+                <p>Уже есть аккаунт? <a href="/login">Войти в систему</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Функция для проверки сложности пароля
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            let feedback = "";
+
+            if (password.length === 0) {
+                return { score: 0, text: "Сложность пароля", color: "#e1e5e9" };
+            }
+
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            // Нормализуем от 0 до 4
+            let normalizedScore = Math.min(4, Math.floor(strength / 2));
+
+            switch(normalizedScore) {
+                case 0:
+                    feedback = "Очень слабый";
+                    return { score: 0, text: feedback, color: "#ff4444", width: "20%" };
+                case 1:
+                    feedback = "Слабый";
+                    return { score: 1, text: feedback, color: "#ff8844", width: "40%" };
+                case 2:
+                    feedback = "Средний";
+                    return { score: 2, text: feedback, color: "#ffcc00", width: "60%" };
+                case 3:
+                    feedback = "Хороший";
+                    return { score: 3, text: feedback, color: "#44cc44", width: "80%" };
+                case 4:
+                    feedback = "Отличный";
+                    return { score: 4, text: feedback, color: "#00aa00", width: "100%" };
+                default:
+                    feedback = "Средний";
+                    return { score: 2, text: feedback, color: "#ffcc00", width: "60%" };
+            }
+        }
+
+        // Функция проверки совпадения паролей
+        function checkPasswordsMatch() {
+            const password = document.getElementById("password").value;
+            const password2 = document.getElementById("password2").value;
+
+            if (password2.length > 0 && password !== password2) {
+                document.getElementById("password2").classList.add("error");
+                return false;
+            } else {
+                document.getElementById("password2").classList.remove("error");
+                return true;
+            }
+        }
+
+        // Функция проверки валидности логина
+        function validateLogin(login) {
+            if (login.length < 3) {
+                return { valid: false, message: "Логин должен содержать минимум 3 символа" };
+            }
+            if (login.length > 20) {
+                return { valid: false, message: "Логин не должен превышать 20 символов" };
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(login)) {
+                return { valid: false, message: "Логин может содержать только буквы, цифры и символ подчеркивания" };
+            }
+            return { valid: true, message: "" };
+        }
+
+        // Функция проверки валидности пароля
+        function validatePassword(password) {
+            if (password.length < 6) {
+                return { valid: false, message: "Пароль должен содержать минимум 6 символов" };
+            }
+            if (password.length > 50) {
+                return { valid: false, message: "Пароль не должен превышать 50 символов" };
+            }
+            return { valid: true, message: "" };
+        }
+
+        // Отображение сообщений пользователю
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = "block";
+
+            // Автоматически скрываем сообщение через 5 секунд (кроме успеха)
+            if (type !== "success") {
+                setTimeout(() => {
+                    if (messageDiv.className.includes(type)) {
+                        messageDiv.style.display = "none";
+                    }
+                }, 5000);
+            }
+        }
+
+        // Скрыть сообщение
+        function hideMessage() {
+            const messageDiv = document.getElementById("message");
+            messageDiv.style.display = "none";
+            messageDiv.className = "message";
+        }
+
+        // Основная функция регистрации
+        function sendRegistration() {
+            const loginInput = document.getElementById("login");
+            const passwordInput = document.getElementById("password");
+            const password2Input = document.getElementById("password2");
+            const registerBtn = document.getElementById("registerBtn");
+            const messageDiv = document.getElementById("message");
+
+            // Получаем значения
+            const login = loginInput.value.trim();
+            const password = passwordInput.value;
+            const password2 = password2Input.value;
+
+            // Очищаем предыдущие сообщения и стили ошибок
+            hideMessage();
+            loginInput.classList.remove("error");
+            passwordInput.classList.remove("error");
+            password2Input.classList.remove("error");
+
+            // Валидация логина
+            const loginValidation = validateLogin(login);
+            if (!loginValidation.valid) {
+                showMessage(loginValidation.message, "error");
+                loginInput.classList.add("error");
+                loginInput.focus();
+                return;
+            }
+
+            // Валидация пароля
+            const passwordValidation = validatePassword(password);
+            if (!passwordValidation.valid) {
+                showMessage(passwordValidation.message, "error");
+                passwordInput.classList.add("error");
+                passwordInput.focus();
+                return;
+            }
+
+            // Проверка на пустой пароль
+            if (!password) {
+                showMessage("Пожалуйста, введите пароль", "error");
+                passwordInput.classList.add("error");
+                passwordInput.focus();
+                return;
+            }
+
+            // Проверка подтверждения пароля
+            if (!password2) {
+                showMessage("Пожалуйста, подтвердите пароль", "error");
+                password2Input.classList.add("error");
+                password2Input.focus();
+                return;
+            }
+
+            // Проверка совпадения паролей
+            if (password !== password2) {
+                showMessage("Пароли не совпадают", "error");
+                passwordInput.classList.add("error");
+                password2Input.classList.add("error");
+                password2Input.focus();
+                return;
+            }
+
+            // Показываем состояние загрузки
+            registerBtn.classList.add("loading");
+            registerBtn.textContent = "Регистрация...";
+
+            // Отправляем запрос на сервер (сохраняем оригинальный функционал)
+            fetch("/registration", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ login, password, password2 })
+            })
+            .then(async response => {
+                // Пытаемся получить данные ответа, если есть
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = { error: response.status === 201 ? "Успешная регистрация" : "Ошибка сервера" };
+                }
+
+                if (response.status === 201) {
+                    // Успешная регистрация
+                    showMessage("Регистрация прошла успешно! Перенаправление в игру...", "success");
+
+                    // Небольшая задержка для показа сообщения
+                    setTimeout(() => {
+                        window.location.href = '/game';
+                    }, 500);
+                } else {
+                    // Ошибка регистрации
+                    const errorMessage = data.error || "Ошибка регистрации. Попробуйте другой логин.";
+                    showMessage(errorMessage, "error");
+
+                    // Очищаем поля с паролями при ошибке
+                    passwordInput.value = "";
+                    password2Input.value = "";
+                    passwordInput.focus();
+
+                    // Возвращаем кнопку в исходное состояние
+                    registerBtn.classList.remove("loading");
+                    registerBtn.textContent = "Зарегистрироваться";
+                }
+            })
+            .catch(error => {
+                console.error("Ошибка:", error);
+                showMessage("Ошибка соединения с сервером. Проверьте подключение.", "error");
+
+                // Возвращаем кнопку в исходное состояние
+                registerBtn.classList.remove("loading");
+                registerBtn.textContent = "Зарегистрироваться";
+            });
+        }
+
+        // Живая проверка сложности пароля
+        const passwordField = document.getElementById("password");
+        const strengthText = document.getElementById("strengthText");
+        const strengthFill = document.getElementById("strengthFill");
+
+        passwordField.addEventListener("input", function() {
+            const password = this.value;
+            const strength = checkPasswordStrength(password);
+            strengthText.textContent = strength.text;
+            strengthFill.style.width = strength.width;
+            strengthFill.style.backgroundColor = strength.color;
+
+            // Если пароль не пустой, показываем индикатор
+            if (password.length > 0) {
+                document.getElementById("passwordStrength").style.opacity = "1";
+            } else {
+                strengthText.textContent = "Сложность пароля";
+                strengthFill.style.width = "0%";
+            }
+
+            // Проверяем совпадение паролей при вводе
+            checkPasswordsMatch();
+        });
+
+        // Проверка совпадения паролей при вводе во втором поле
+        const password2Field = document.getElementById("password2");
+        password2Field.addEventListener("input", function() {
+            checkPasswordsMatch();
+        });
+
+        // Проверка логина на лету (убираем класс ошибки при вводе)
+        const loginField = document.getElementById("login");
+        loginField.addEventListener("input", function() {
+            this.classList.remove("error");
+            hideMessage();
+        });
+
+        // Добавляем возможность отправки формы по нажатию Enter
+        document.addEventListener("DOMContentLoaded", function() {
+            const inputs = document.querySelectorAll("input");
+            inputs.forEach(input => {
+                input.addEventListener("keypress", function(event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        sendRegistration();
+                    }
+                });
+            });
+
+            // Фокус на поле логина при загрузке
+            loginField.focus();
+
+            // Инициализация индикатора сложности пароля
+            strengthFill.style.width = "0%";
+            strengthFill.style.backgroundColor = "#e1e5e9";
+        });
+    </script>
+</body>
+</html>
