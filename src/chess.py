@@ -82,7 +82,6 @@ class Chess:
             self.position.coord_of_en_passant = Coord(7 - int(main_of_fen[3][1]) + 1,
                                                       self.from_letter_to_coord_type(main_of_fen[3][0]))
 
-
         board_of_fen = main_of_fen[0].split('/')
         for i in range(len(self.board)):
             for j in range(8):

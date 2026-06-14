@@ -1,10 +1,638 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>GAME</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Шахматы против AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 32px;
+            padding: 25px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.4);
+            max-width: 800px;
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .game-header h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .game-status {
+            color: #666;
+            font-size: 1rem;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .chessboard-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            width: 100%;
+            max-width: 560px;
+            aspect-ratio: 1 / 1;
+            background: #b58863;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.3);
+            border: 3px solid #d4af7a;
+        }
+
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            position: relative;
+        }
+
+        .square:hover {
+            filter: brightness(0.95);
+            transform: scale(1.02);
+            z-index: 1;
+        }
+
+        .square-light {
+            background-color: #f0d9b5;
+        }
+
+        .square-dark {
+            background-color: #b58863;
+        }
+
+        .square-highlight {
+            background-color: #7b9c5e !important;
+            box-shadow: inset 0 0 0 3px gold;
+            position: relative;
+        }
+
+        .square-highlight::after {
+            content: "●";
+            position: absolute;
+            font-size: 1rem;
+            color: gold;
+            bottom: 2px;
+            right: 2px;
+        }
+
+        .square-last-move {
+            background-color: #cdd16a !important;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+        }
+
+        .turn-indicator {
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 8px 20px;
+            border-radius: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .turn-indicator.ai-turn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .color-badge {
+            padding: 8px 20px;
+            border-radius: 40px;
+            background: white;
+            font-weight: 600;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-back {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 40px;
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .captured-pieces {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 15px;
+            font-size: 1.2rem;
+        }
+
+        .captured-white, .captured-black {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .square {
+                font-size: 1.5rem;
+            }
+
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .turn-indicator {
+                font-size: 0.9rem;
+                padding: 5px 12px;
+            }
+
+            .color-badge {
+                font-size: 0.9rem;
+                padding: 5px 12px;
+            }
+
+            .btn-back {
+                padding: 6px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @keyframes pieceMove {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .square {
+            animation: pieceMove 0.2s ease;
+        }
+
+        .check-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            animation: slideInRight 0.3s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 <body>
-<h1>There will be game</h1>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>⚔️ Шахматы против AI ⚔️</h1>
+            <div class="game-status" id="gameStatus">🤖 Игра началась!</div>
+        </div>
+
+        <div class="chessboard-wrapper">
+            <div class="chessboard" id="chessboard"></div>
+        </div>
+
+        <div class="captured-pieces">
+            <div class="captured-white">⚪ Взятые: <span id="capturedWhite"></span></div>
+            <div class="captured-black">⚫ Взятые: <span id="capturedBlack"></span></div>
+        </div>
+
+        <div class="game-info">
+            <div class="turn-indicator" id="turnIndicator">
+                <span>🎲</span>
+                <span id="turnText">Ваш ход</span>
+            </div>
+            <div class="color-badge" id="playerColorBadge">
+                🎨 Вы играете: —
+            </div>
+            <button class="btn-back" id="backToMenuBtn">
+                🏠 Главное меню
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Начальная расстановка фигур
+        const initialBoard = [
+            ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+            ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+            ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+        ];
+
+        let board = JSON.parse(JSON.stringify(initialBoard));
+        let currentTurn = 'white';
+        let playerColor = 'white';
+        let gameActive = true;
+        let selectedRow = null;
+        let selectedCol = null;
+        let lastMove = null;
+        let capturedWhite = [];
+        let capturedBlack = [];
+
+        // Получаем выбранный цвет из localStorage
+        const storedColor = localStorage.getItem('playerColor');
+        if (storedColor === 'white' || storedColor === 'black') {
+            playerColor = storedColor;
+        }
+
+        // Обновляем отображение цвета игрока
+        document.getElementById('playerColorBadge').innerHTML = `🎨 Вы играете: ${playerColor === 'white' ? 'Белыми ♔' : 'Чёрными ♚'}`;
+
+        // Проверка, ход ли AI
+        function isAITurn() {
+            return gameActive && currentTurn !== playerColor;
+        }
+
+        // Простая валидация ходов (для демо)
+        function isValidMove(fromRow, fromCol, toRow, toCol, turn) {
+            const piece = board[fromRow][fromCol];
+            if (!piece) return false;
+
+            const isWhitePiece = '♙♖♘♗♕♔'.includes(piece);
+            if ((turn === 'white' && !isWhitePiece) || (turn === 'black' && isWhitePiece)) {
+                return false;
+            }
+
+            // Нельзя ходить на свою фигуру
+            const targetPiece = board[toRow][toCol];
+            if (targetPiece) {
+                const isTargetWhite = '♙♖♘♗♕♔'.includes(targetPiece);
+                if ((turn === 'white' && isTargetWhite) || (turn === 'black' && !isTargetWhite)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Выполнение хода
+        function makeMove(fromRow, fromCol, toRow, toCol) {
+            const piece = board[fromRow][fromCol];
+            const capturedPiece = board[toRow][toCol];
+
+            // Запоминаем взятые фигуры
+            if (capturedPiece) {
+                if (currentTurn === 'white') {
+                    capturedBlack.push(capturedPiece);
+                } else {
+                    capturedWhite.push(capturedPiece);
+                }
+                updateCapturedDisplay();
+            }
+
+            board[toRow][toCol] = piece;
+            board[fromRow][fromCol] = '';
+            lastMove = { from: [fromRow, fromCol], to: [toRow, toCol] };
+
+            return true;
+        }
+
+        // Получить все возможные ходы (упрощённо)
+        function getAllMoves(turn) {
+            let moves = [];
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const piece = board[i][j];
+                    if (piece) {
+                        const isWhitePiece = '♙♖♘♗♕♔'.includes(piece);
+                        if ((turn === 'white' && isWhitePiece) || (turn === 'black' && !isWhitePiece)) {
+                            for (let ti = 0; ti < 8; ti++) {
+                                for (let tj = 0; tj < 8; tj++) {
+                                    if (isValidMove(i, j, ti, tj, turn)) {
+                                        moves.push({ fromRow: i, fromCol: j, toRow: ti, toCol: tj });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return moves;
+        }
+
+        // AI ход (случайный)
+        function aiMove() {
+            if (!isAITurn() || !gameActive) return;
+
+            setTimeout(() => {
+                if (!isAITurn() || !gameActive) return;
+
+                const moves = getAllMoves(currentTurn);
+                if (moves.length === 0) {
+                    gameActive = false;
+                    const winner = currentTurn === 'white' ? 'Чёрные' : 'Белые';
+                    showNotification(`🏆 Игра окончена! Победили ${winner}!`);
+                    updateUI();
+                    return;
+                }
+
+                const randomMove = moves[Math.floor(Math.random() * moves.length)];
+                makeMove(randomMove.fromRow, randomMove.fromCol, randomMove.toRow, randomMove.toCol);
+
+                // Смена хода
+                currentTurn = currentTurn === 'white' ? 'black' : 'white';
+                selectedRow = null;
+                selectedCol = null;
+
+                renderBoard();
+                updateUI();
+
+                // Проверка шаха
+                checkForCheck();
+
+                // Если после хода AI снова ход AI (но такого не может быть, т.к. ход сменился)
+                if (isAITurn() && gameActive) {
+                    aiMove();
+                }
+            }, 300);
+        }
+
+        // Обработка клика по клетке
+        function handleSquareClick(row, col) {
+            if (!gameActive) return;
+            if (currentTurn !== playerColor) {
+                showNotification('⏳ Сейчас ходит AI! Подождите...');
+                return;
+            }
+
+            const piece = board[row][col];
+
+            // Если ничего не выбрано и кликнули на свою фигуру
+            if (selectedRow === null) {
+                if (piece) {
+                    const isWhitePiece = '♙♖♘♗♕♔'.includes(piece);
+                    if ((playerColor === 'white' && isWhitePiece) || (playerColor === 'black' && !isWhitePiece)) {
+                        selectedRow = row;
+                        selectedCol = col;
+                        renderBoard();
+                    }
+                }
+                return;
+            }
+
+            // Если выбрана фигура, пытаемся сделать ход
+            if (isValidMove(selectedRow, selectedCol, row, col, currentTurn)) {
+                makeMove(selectedRow, selectedCol, row, col);
+                currentTurn = currentTurn === 'white' ? 'black' : 'white';
+                selectedRow = null;
+                selectedCol = null;
+                renderBoard();
+                updateUI();
+
+                // Проверка шаха
+                checkForCheck();
+
+                // Ход AI
+                if (isAITurn() && gameActive) {
+                    aiMove();
+                }
+            } else {
+                selectedRow = null;
+                selectedCol = null;
+                renderBoard();
+                showNotification('❌ Невозможный ход!');
+            }
+        }
+
+        // Проверка шаха (упрощённая)
+        function checkForCheck() {
+            const kingPiece = currentTurn === 'white' ? '♔' : '♚';
+            let kingPos = null;
+
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    if (board[i][j] === kingPiece) {
+                        kingPos = [i, j];
+                        break;
+                    }
+                }
+            }
+
+            if (kingPos) {
+                // Проверяем, может ли какая-либо фигура противника съесть короля
+                const opponentTurn = currentTurn === 'white' ? 'black' : 'white';
+                const moves = getAllMoves(opponentTurn);
+                const isCheck = moves.some(move => move.toRow === kingPos[0] && move.toCol === kingPos[1]);
+
+                if (isCheck) {
+                    showNotification('⚠️ ШАХ! ⚠️');
+                    const turnIndicator = document.getElementById('turnIndicator');
+                    turnIndicator.style.animation = 'shake 0.5s ease';
+                    setTimeout(() => {
+                        turnIndicator.style.animation = '';
+                    }, 500);
+                }
+            }
+        }
+
+        // Отображение уведомления
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'check-notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 2000);
+        }
+
+        // Обновление отображения взятых фигур
+        function updateCapturedDisplay() {
+            document.getElementById('capturedWhite').innerHTML = capturedWhite.join(' ');
+            document.getElementById('capturedBlack').innerHTML = capturedBlack.join(' ');
+        }
+
+        // Обновление UI
+        function updateUI() {
+            const turnText = document.getElementById('turnText');
+            const turnIndicator = document.getElementById('turnIndicator');
+
+            if (!gameActive) {
+                turnText.textContent = 'Игра окончена';
+                return;
+            }
+
+            if (currentTurn === playerColor) {
+                turnText.textContent = 'Ваш ход';
+                turnIndicator.classList.remove('ai-turn');
+            } else {
+                turnText.textContent = 'Ход AI...';
+                turnIndicator.classList.add('ai-turn');
+            }
+        }
+
+        // Отрисовка доски
+        function renderBoard() {
+            const boardElement = document.getElementById('chessboard');
+            boardElement.innerHTML = '';
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    const isLight = (row + col) % 2 === 0;
+                    square.className = `square ${isLight ? 'square-light' : 'square-dark'}`;
+
+                    // Подсветка выбранной клетки
+                    if (selectedRow === row && selectedCol === col) {
+                        square.classList.add('square-highlight');
+                    }
+
+                    // Подсветка последнего хода
+                    if (lastMove) {
+                        if ((lastMove.from[0] === row && lastMove.from[1] === col) ||
+                            (lastMove.to[0] === row && lastMove.to[1] === col)) {
+                            square.classList.add('square-last-move');
+                        }
+                    }
+
+                    square.textContent = board[row][col];
+                    square.addEventListener('click', () => handleSquareClick(row, col));
+                    boardElement.appendChild(square);
+                }
+            }
+        }
+
+        // Сброс игры
+        function resetGame() {
+            board = JSON.parse(JSON.stringify(initialBoard));
+            currentTurn = 'white';
+            gameActive = true;
+            selectedRow = null;
+            selectedCol = null;
+            lastMove = null;
+            capturedWhite = [];
+            capturedBlack = [];
+            updateCapturedDisplay();
+            renderBoard();
+            updateUI();
+            showNotification('🔄 Новая игра!');
+        }
+
+        // Возврат в меню
+        document.getElementById('backToMenuBtn').addEventListener('click', () => {
+            window.location.href = '/main_page';
+        });
+
+        // Инициализация
+        function init() {
+            renderBoard();
+            updateUI();
+
+            // Если игрок играет чёрными, AI ходит первым
+            if (playerColor === 'black' && gameActive) {
+                setTimeout(() => {
+                    if (currentTurn === 'white' && gameActive) {
+                        aiMove();
+                    }
+                }, 500);
+            }
+        }
+
+        // Добавляем анимацию тряски для шаха
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Запуск
+        init();
+    </script>
 </body>
 </html>

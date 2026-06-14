@@ -37,11 +37,18 @@ def print_name_and_password():
     return ''
 
 
+@app.route('/main_page')
+def main_page():
+    if "user" not in session:
+        return redirect(url_for('input_page'))
+    return render_template('main_page.html'), 200
+
+
 @app.route('/game')
 def game():
     if "user" not in session:
         return redirect(url_for('input_page'))
-    return render_template('game_AI_full.html'), 200
+    return render_template('game.html'), 200
 
 
 @app.route('/registration', methods=['GET'])

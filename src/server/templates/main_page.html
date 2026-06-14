@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Шахматный движок | Главная</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Шахматный фон с клетками */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%);
+            background-size: 80px 80px;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image:
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 80px),
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 80px);
+            pointer-events: none;
+        }
+
+        /* Анимированные шахматные фигуры на фоне */
+        .chess-piece {
+            position: absolute;
+            font-size: 2.5rem;
+            opacity: 0.08;
+            animation: float 25s infinite linear;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.08;
+            }
+            90% {
+                opacity: 0.08;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 15s infinite linear;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1300px;
+            padding: 20px;
+            margin: 0 auto;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.2);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-header::before {
+            content: "♔ ♕ ♖ ♗ ♘ ♙";
+            position: absolute;
+            bottom: -10px;
+            right: -20px;
+            font-size: 80px;
+            opacity: 0.1;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .chess-icon-header {
+            font-size: 3rem;
+            display: inline-block;
+            animation: bounce 2s infinite;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .game-header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin: 15px 0 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .game-header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+
+        .game-content {
+            padding: 40px;
+        }
+
+        .board-preview {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .chessboard-placeholder {
+            background: #f0d9b5;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .chessboard-placeholder:hover {
+            transform: scale(1.02);
+        }
+
+        .mini-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            background: #b58863;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .chess-square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .chess-square:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.3));
+        }
+
+        .square-light { background-color: #f0d9b5; }
+        .square-dark { background-color: #b58863; }
+
+        .info-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .info-icon { font-size: 2.5rem; margin-bottom: 15px; display: inline-block; }
+        .info-card h3 { color: #333; font-size: 1.3rem; margin-bottom: 10px; font-weight: 600; }
+        .info-card p { color: #666; font-size: 0.95rem; line-height: 1.5; }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5); }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        .btn-secondary:hover { background: #667eea; color: white; transform: translateY(-2px); }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4); }
+
+        /* Модальное окно выбора цвета */
+        .color-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeInModal 0.3s ease;
+        }
+
+        @keyframes fadeInModal {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .color-modal-content {
+            background: white;
+            border-radius: 32px;
+            max-width: 450px;
+            width: 90%;
+            padding: 35px;
+            text-align: center;
+            animation: slideDown 0.3s ease;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .color-modal-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .color-modal h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .color-modal p {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            padding: 15px 25px;
+            border-radius: 60px;
+            background: #f8f9fa;
+            border: 2px solid transparent;
+        }
+
+        .color-option:hover {
+            transform: scale(1.05);
+            background: #e9ecef;
+        }
+
+        .color-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+        }
+
+        .piece-demo {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .color-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .color-desc {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+
+        .modal-btn-cancel {
+            background: #e9ecef;
+            color: #666;
+        }
+        .modal-btn-cancel:hover { background: #dee2e6; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .toast.show { transform: translateX(0); }
+
+        @media (max-width: 768px) {
+            .game-header { padding: 20px; }
+            .game-header h1 { font-size: 1.8rem; }
+            .game-content { padding: 25px; }
+            .info-panel { grid-template-columns: 1fr; gap: 15px; }
+            .action-buttons { gap: 15px; }
+            .btn { padding: 10px 20px; font-size: 0.9rem; }
+            .chess-square { font-size: 1.2rem; }
+            .color-option { padding: 10px 18px; }
+            .piece-demo { font-size: 2rem; }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="chess-piece" style="left: 3%; animation-duration: 28s;">♔</div>
+    <div class="chess-piece" style="left: 12%; animation-duration: 32s;">♕</div>
+    <div class="chess-piece" style="left: 88%; animation-duration: 24s;">♖</div>
+    <div class="chess-piece" style="left: 78%; animation-duration: 30s;">♗</div>
+    <div class="chess-piece" style="left: 95%; animation-duration: 36s;">♘</div>
+    <div class="chess-piece" style="left: 42%; animation-duration: 26s;">♙</div>
+    <div class="chess-piece" style="left: 22%; animation-duration: 34s;">♚</div>
+    <div class="chess-piece" style="left: 68%; animation-duration: 29s;">♛</div>
+
+    <div class="particle" style="left: 10%; animation-duration: 18s;"></div>
+    <div class="particle" style="left: 30%; animation-duration: 22s;"></div>
+    <div class="particle" style="left: 50%; animation-duration: 20s;"></div>
+    <div class="particle" style="left: 70%; animation-duration: 25s;"></div>
+    <div class="particle" style="left: 90%; animation-duration: 19s;"></div>
+
+    <div class="container">
+        <div class="game-card">
+            <div class="game-header">
+                <div class="chess-icon-header">♜</div>
+                <h1>Шахматный движок</h1>
+                <p>Интеллектуальная шахматная платформа</p>
+            </div>
+
+            <div class="game-content">
+                <div class="board-preview">
+                    <div class="chessboard-placeholder">
+                        <div class="mini-board" id="chessboard"></div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-card">
+                        <div class="info-icon">🤖</div>
+                        <h3>AI Соперник</h3>
+                        <p>Умный шахматный движок с несколькими уровнями сложности</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">🎮</div>
+                        <h3>Режимы игры</h3>
+                        <p>Игра против ИИ, с другом или анализ партий</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">📊</div>
+                        <h3>Анализ позиций</h3>
+                        <p>Оценка позиции, подсказки и статистика</p>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="startGameBtn">
+                        🤖 AI соперник
+                    </button>
+                    <button class="btn btn-secondary" id="profileBtn">
+                        👤 Профиль
+                    </button>
+                    <button class="btn btn-danger" id="logoutBtn">
+                        🚪 Выйти
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно выбора цвета -->
+    <div id="colorModal" class="color-modal">
+        <div class="color-modal-content">
+            <div class="color-modal-icon">♔</div>
+            <h3>Выбор цвета</h3>
+            <p>Выберите, каким цветом вы хотите играть против ИИ</p>
+            <div class="color-options" id="colorOptions">
+                <div class="color-option" data-color="white">
+                    <div class="piece-demo">♔</div>
+                    <div class="color-label">Белые</div>
+                    <div class="color-desc">Первый ход</div>
+                </div>
+                <div class="color-option" data-color="black">
+                    <div class="piece-demo">♚</div>
+                    <div class="color-label">Чёрные</div>
+                    <div class="color-desc">Второй ход</div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-confirm" id="confirmColorBtn">Начать игру</button>
+                <button class="modal-btn modal-btn-cancel" id="cancelColorBtn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <span id="toastMessage">Добро пожаловать!</span>
+    </div>
+
+    <script>
+        let selectedColor = 'white';
+
+        function initChessboard() {
+            const board = document.getElementById('chessboard');
+            if (!board) return;
+            board.innerHTML = '';
+            const pieces = {
+                'a8': '♜', 'b8': '♞', 'c8': '♝', 'd8': '♛', 'e8': '♚', 'f8': '♝', 'g8': '♞', 'h8': '♜',
+                'a7': '♟', 'b7': '♟', 'c7': '♟', 'd7': '♟', 'e7': '♟', 'f7': '♟', 'g7': '♟', 'h7': '♟',
+                'a2': '♙', 'b2': '♙', 'c2': '♙', 'd2': '♙', 'e2': '♙', 'f2': '♙', 'g2': '♙', 'h2': '♙',
+                'a1': '♖', 'b1': '♘', 'c1': '♗', 'd1': '♕', 'e1': '♔', 'f1': '♗', 'g1': '♘', 'h1': '♖'
+            };
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            for (let rank = 8; rank >= 1; rank--) {
+                for (let file of files) {
+                    const square = document.createElement('div');
+                    const isLight = (files.indexOf(file) + rank) % 2 === 0;
+                    square.className = `chess-square ${isLight ? 'square-light' : 'square-dark'}`;
+                    const pieceKey = file + rank;
+                    square.textContent = pieces[pieceKey] || '';
+                    square.addEventListener('click', () => showToast('🎯 Выберите AI соперника для игры!'));
+                    board.appendChild(square);
+                }
+            }
+        }
+
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function showColorModal() {
+            const modal = document.getElementById('colorModal');
+            modal.style.display = 'flex';
+            selectedColor = 'white';
+            updateColorSelection();
+        }
+
+        function hideColorModal() {
+            const modal = document.getElementById('colorModal');
+            modal.style.display = 'none';
+        }
+
+        function updateColorSelection() {
+            const options = document.querySelectorAll('.color-option');
+            options.forEach(opt => {
+                if (opt.dataset.color === selectedColor) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        }
+
+        // Переход на игровую страницу с выбранным цветом
+        function startGameWithAI() {
+            const startBtn = document.getElementById('startGameBtn');
+            const originalText = startBtn.innerHTML;
+            startBtn.innerHTML = '<span class="loading-spinner"></span> Запуск игры...';
+            startBtn.disabled = true;
+
+            // Сохраняем выбранный цвет в localStorage для передачи на игровую страницу
+            localStorage.setItem('playerColor', selectedColor);
+            localStorage.setItem('gameMode', 'ai');
+
+            // Небольшая задержка для анимации и перехода
+            setTimeout(() => {
+                window.location.href = '/game';
+            }, 400);
+
+            setTimeout(() => {
+                if (startBtn.disabled) {
+                    startBtn.innerHTML = originalText;
+                    startBtn.disabled = false;
+                }
+            }, 2000);
+        }
+
+        // Обработчики для модального окна выбора цвета
+        function initColorModalHandlers() {
+            const options = document.querySelectorAll('.color-option');
+            options.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    selectedColor = opt.dataset.color;
+                    updateColorSelection();
+                });
+            });
+
+            document.getElementById('confirmColorBtn').addEventListener('click', () => {
+                if (selectedColor) {
+                    hideColorModal();
+                    startGameWithAI();
+                } else {
+                    showToast('Пожалуйста, выберите цвет фигур');
+                }
+            });
+
+            document.getElementById('cancelColorBtn').addEventListener('click', () => {
+                hideColorModal();
+            });
+
+            window.addEventListener('click', (e) => {
+                const modal = document.getElementById('colorModal');
+                if (e.target === modal) hideColorModal();
+            });
+        }
+
+        function showProfile() {
+            showToast('👤 Функция профиля в разработке!');
+        }
+
+        function logout() {
+            showToast('🚪 Выход из системы...');
+            setTimeout(() => {
+                window.location.href = '/logout';
+            }, 800);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initChessboard();
+            initColorModalHandlers();
+            showToast('Добро пожаловать! Выберите AI соперника', 3500);
+
+            const startBtn = document.getElementById('startGameBtn');
+            startBtn.addEventListener('click', () => showColorModal());
+
+            const profileBtn = document.getElementById('profileBtn');
+            profileBtn.addEventListener('click', showProfile);
+
+            const logoutBtn = document.getElementById('logoutBtn');
+            logoutBtn.addEventListener('click', logout);
+
+            // Эффект ripple для кнопок
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    ripple.style.position = 'absolute';
+                    ripple.style.borderRadius = '50%';
+                    ripple.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                    ripple.style.width = '100px';
+                    ripple.style.height = '100px';
+                    ripple.style.marginLeft = '-50px';
+                    ripple.style.marginTop = '-50px';
+                    ripple.style.pointerEvents = 'none';
+                    ripple.style.animation = 'ripple 0.6s linear';
+                    const rect = this.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideColorModal();
+        });
+    </script>
+</body>
+</html>
