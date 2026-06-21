@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from src.chess import Chess
 from src.server.db import init_db, insert_data, is_exist, select_password
 from src.server.utils import checking_password_security
 
@@ -48,7 +49,34 @@ def main_page():
 def game():
     if "user" not in session:
         return redirect(url_for('input_page'))
-    return render_template('game.html'), 200
+    initial_fen = "8/k7/8/8/8/4R3/8/5K2 w - - 0 1"
+    check_board = Chess(initial_fen)
+    check_board.position.generate_general_moves()
+    # Словарь с ходами: ключ - координата фигуры, значение - список возможных ходов
+    # (ключи - строки "row,col", значения - списки строк "row,col")
+    main_color_moves = check_board.get_moves_for_active_color()
+    # main_color_moves = {
+    #     # Белая ладья на (5, 4) - строка 5 (3-я горизонталь), столбец 4 (e)
+    #     "5,4": [
+    #         # Ходы по вертикали (вверх)
+    #         "4,4", "3,4", "2,4", "1,4", "0,4",
+    #         # Ходы по вертикали (вниз)
+    #         "6,4", "7,4",
+    #         # Ходы по горизонтали (влево)
+    #         "5,3", "5,2", "5,1", "5,0",
+    #         # Ходы по горизонтали (вправо)
+    #         "5,5", "5,6", "5,7"
+    #     ],
+    #
+    #     # Белый король на (7, 5) - строка 7 (1-я горизонталь), столбец 5 (f)
+    #     "7,5": [
+    #         # Ходы вверх
+    #         "6,4", "6,5", "6,6",
+    #         # Ходы влево-вправо
+    #         "7,4", "7,6"
+    #     ]
+    # }
+    return render_template('game.html', fen=initial_fen, all_possible_moves=main_color_moves)
 
 
 @app.route('/registration', methods=['GET'])

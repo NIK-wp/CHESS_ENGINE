@@ -43,19 +43,19 @@ class Chess:
         print('_ _ _ _ _ _ _ _')
 
     def show_moves(self) -> None:
-        all_white_possible_moves = []
+        all_possible_moves = []
         for white_fig in self.position.white_figures:
             for move in white_fig.moves:
-                all_white_possible_moves.append(move)
+                all_possible_moves.append(move)
         for black_fig in self.position.black_figures:
             for move in black_fig.moves:
-                all_white_possible_moves.append(move)
+                all_possible_moves.append(move)
 
         print('_ _ _ _ _ _ _ _')
         print()
         for y in range(8):
             for x in range(8):
-                if Coord(y, x) in all_white_possible_moves:
+                if Coord(y, x) in all_possible_moves:
                     print('*', end=' ')
                 elif self.board[y][x] != '':
                     print(self.board[y][x], end=' ')
@@ -64,6 +64,8 @@ class Chess:
             print()
         print()
         print('_ _ _ _ _ _ _ _')
+        print(self.position.white_figures)
+        print(self.position.black_figures)
 
     def parse_fen(self, fen: str) -> None:
         """Парсинг строки FEN Forsyth–Edwards Notation и заполнение доски.
@@ -167,9 +169,24 @@ class Chess:
         }
         return transformator[coord]
 
+    def get_moves_for_active_color(self) -> dict[str, list]:
+        main_color_moves = {}
+        if self.order_of_move == 'w':
+            for white_fig in self.position.white_figures:
+                main_color_moves[f'{white_fig.coord.y},{white_fig.coord.x}'] = []
+                for move in white_fig.moves:
+                    main_color_moves[f'{white_fig.coord.y},{white_fig.coord.x}'].append(f'{move.y},{move.x}')
+        else:
+            for black_fig in self.position.black_figures:
+                main_color_moves[f'{black_fig.coord.y},{black_fig.coord.x}'] = []
+                for move in black_fig.moves:
+                    main_color_moves[f'{black_fig.coord.y},{black_fig.coord.x}'].append(f'{move.y},{move.x}')
+        print(main_color_moves)
+        return main_color_moves
+
 
 if __name__ == '__main__':
-    fen = '8/5K1k/8/7R/8/8/8/8 b - - 0 1'
+    fen = '8/k7/8/8/8/4R3/8/5K2 w - - 0 1'
     check_board = Chess(fen)
     check_board.position.generate_general_moves()
     check_board.show_moves()
