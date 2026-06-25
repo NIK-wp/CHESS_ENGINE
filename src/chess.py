@@ -83,6 +83,10 @@ class Chess:
             print(main_of_fen)
             self.position.coord_of_en_passant = Coord(7 - int(main_of_fen[3][1]) + 1,
                                                       self.from_letter_to_coord_type(main_of_fen[3][0]))
+        if len(main_of_fen) > 4:
+            self.half_move_clock = int(main_of_fen[4])
+        if len(main_of_fen) > 5:
+            self.full_move_number = int(main_of_fen[5])
 
         board_of_fen = main_of_fen[0].split('/')
         for i in range(len(self.board)):
@@ -169,6 +173,117 @@ class Chess:
         }
         return transformator[coord]
 
+    def apply_move(self, from_y: int, from_x: int, to_y: int, to_x: int, promotion: str | None = None) -> str:
+        moving_piece = self.board[from_y][from_x]
+        if not moving_piece:
+            raise ValueError('There is no piece on the source square')
+
+        if moving_piece.isupper() != (self.position.order_of_move == 'w'):
+            raise ValueError('The selected piece does not belong to the active color')
+
+        legal_move = self._find_legal_move(from_y, from_x, to_y, to_x, promotion)
+        if legal_move is None:
+            raise ValueError('Illegal move')
+
+        target_piece = self.board[to_y][to_x]
+        self._remove_castling_after_move(moving_piece, from_y, from_x, to_y, to_x, target_piece)
+
+        self.board[from_y][from_x] = ''
+        is_en_passant = (
+                moving_piece.upper() == 'P'
+                and self.position.coord_of_en_passant == Coord(to_y, to_x)
+                and target_piece == ''
+                and from_x != to_x
+        )
+        if is_en_passant:
+            captured_pawn_y = to_y + 1 if moving_piece == 'P' else to_y - 1
+            self.board[captured_pawn_y][to_x] = ''
+
+        piece_for_target = getattr(legal_move, 'figure', moving_piece)
+        if moving_piece.islower():
+            piece_for_target = piece_for_target.lower()
+        self.board[to_y][to_x] = piece_for_target
+
+        if moving_piece.upper() == 'K' and abs(to_x - from_x) == 2:
+            self._apply_castling_rook_move(from_y, from_x, to_x)
+
+        self.position.coord_of_en_passant = None
+        if moving_piece.upper() == 'P' and abs(to_y - from_y) == 2:
+            self.position.coord_of_en_passant = Coord((from_y + to_y) // 2, from_x)
+
+        if moving_piece.upper() == 'P' or target_piece or is_en_passant:
+            self.half_move_clock = 0
+        else:
+            self.half_move_clock += 1
+
+        if self.position.order_of_move == 'b':
+            self.full_move_number += 1
+
+        self.order_of_move = 'b' if self.position.order_of_move == 'w' else 'w'
+        self.position.order_of_move = self.order_of_move
+        return self.generate_fen()
+
+    def _find_legal_move(self, from_y: int, from_x: int, to_y: int, to_x: int, promotion: str | None):
+        if self.position.order_of_move == 'w':
+            figures = self.position.white_figures
+        else:
+            figures = self.position.black_figures
+
+        for figure in figures:
+            if figure.coord == Coord(from_y, from_x):
+                if not figure.moves:
+                    figure.generate_moves(
+                        self.position.coord_of_white_king if self.position.order_of_move == 'w'
+                        else self.position.coord_of_black_king,
+                        self.position.coord_of_en_passant,
+                        self.board,
+                        self.position.filling_in_the_castling_parameters(FigureType.king, figure.color),
+                        self.position.filling_in_the_castling_parameters(FigureType.queen, figure.color)
+                    )
+                for move in figure.moves:
+                    if move == Coord(to_y, to_x):
+                        if promotion and hasattr(move, 'figure') and move.figure.lower() != promotion.lower():
+                            continue
+                        return move
+        return None
+
+    def _remove_castling_after_move(self, moving_piece: str, from_y: int, from_x: int,
+                                    to_y: int, to_x: int, target_piece: str) -> None:
+        if moving_piece == 'K':
+            self.position.castling['K'] = False
+            self.position.castling['Q'] = False
+        elif moving_piece == 'k':
+            self.position.castling['k'] = False
+            self.position.castling['q'] = False
+        elif moving_piece == 'R' and from_y == 7 and from_x == 0:
+            self.position.castling['Q'] = False
+        elif moving_piece == 'R' and from_y == 7 and from_x == 7:
+            self.position.castling['K'] = False
+        elif moving_piece == 'r' and from_y == 0 and from_x == 0:
+            self.position.castling['q'] = False
+        elif moving_piece == 'r' and from_y == 0 and from_x == 7:
+            self.position.castling['k'] = False
+
+        if target_piece == 'R' and to_y == 7 and to_x == 0:
+            self.position.castling['Q'] = False
+        elif target_piece == 'R' and to_y == 7 and to_x == 7:
+            self.position.castling['K'] = False
+        elif target_piece == 'r' and to_y == 0 and to_x == 0:
+            self.position.castling['q'] = False
+        elif target_piece == 'r' and to_y == 0 and to_x == 7:
+            self.position.castling['k'] = False
+
+    def _apply_castling_rook_move(self, king_y: int, king_from_x: int, king_to_x: int) -> None:
+        if king_to_x > king_from_x:
+            rook_from_x = 7
+            rook_to_x = king_to_x - 1
+        else:
+            rook_from_x = 0
+            rook_to_x = king_to_x + 1
+
+        self.board[king_y][rook_to_x] = self.board[king_y][rook_from_x]
+        self.board[king_y][rook_from_x] = ''
+
     def get_moves_for_active_color(self) -> dict[str, list]:
         main_color_moves = {}
         if self.order_of_move == 'w':
@@ -181,7 +296,6 @@ class Chess:
                 main_color_moves[f'{black_fig.coord.y},{black_fig.coord.x}'] = []
                 for move in black_fig.moves:
                     main_color_moves[f'{black_fig.coord.y},{black_fig.coord.x}'].append(f'{move.y},{move.x}')
-        print(main_color_moves)
         return main_color_moves
 
 

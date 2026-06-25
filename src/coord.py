@@ -22,6 +22,8 @@ class Coord:
         return f'({self.x}, {self.y})'
 
     def __eq__(self, other: 'Coord') -> bool:
+        if not isinstance(other, Coord):
+            return False
         return self.x == other.x and self.y == other.y
 
 
@@ -32,6 +34,8 @@ class CoordWithCastling(Coord):
         return f'({self.x}, {self.y}, Castling)'
 
     def __eq__(self, other: 'Coord') -> bool:
+        if not isinstance(other, Coord):
+            return False
         return self.x == other.x and self.y == other.y
 
 

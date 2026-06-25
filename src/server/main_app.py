@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+import random
+
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from src.chess import Chess
+from src.enums import Color
 from src.server.db import init_db, insert_data, is_exist, select_password
 from src.server.utils import checking_password_security
 
@@ -10,6 +13,63 @@ app = Flask(__name__)
 app.secret_key = 'secret_key'
 
 init_db()
+
+INITIAL_GAME_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+PLAYER_COLORS = {"white", "black"}
+
+
+def generated_moves_for(fen: str) -> tuple[Chess, dict[str, list]]:
+    chess = Chess(fen)
+    chess.position.generate_general_moves()
+    return chess, chess.get_moves_for_active_color()
+
+
+def random_move_from(moves: dict[str, list]) -> tuple[int, int, int, int] | None:
+    move_pairs = [
+        (from_square, to_square)
+        for from_square, destinations in moves.items()
+        for to_square in destinations
+    ]
+    if not move_pairs:
+        return None
+
+    from_square, to_square = random.choice(move_pairs)
+    from_y, from_x = [int(value) for value in from_square.split(',')]
+    to_y, to_x = [int(value) for value in to_square.split(',')]
+    return from_y, from_x, to_y, to_x
+
+
+def move_payload(from_y: int, from_x: int, to_y: int, to_x: int) -> dict:
+    return {'from': [from_y, from_x], 'to': [to_y, to_x]}
+
+
+def active_color_name(chess: Chess) -> str:
+    return 'white' if chess.position.order_of_move == 'w' else 'black'
+
+
+def game_result(chess: Chess, moves: dict[str, list]) -> dict | None:
+    if any(moves.values()):
+        return None
+
+    color_to_move = active_color_name(chess)
+    king_color = Color.white if color_to_move == 'white' else Color.black
+    is_check = chess.position.check_to_king(king_color)
+
+    if is_check:
+        winner = 'black' if color_to_move == 'white' else 'white'
+        return {
+            'game_over': True,
+            'type': 'checkmate',
+            'winner': winner,
+            'message': f"Мат. Победили {'белые' if winner == 'white' else 'чёрные'}."
+        }
+
+    return {
+        'game_over': True,
+        'type': 'stalemate',
+        'winner': None,
+        'message': 'Пат. Ничья.'
+    }
 
 
 @app.route('/', methods=['GET'])
@@ -49,34 +109,97 @@ def main_page():
 def game():
     if "user" not in session:
         return redirect(url_for('input_page'))
-    initial_fen = "8/k7/8/8/8/4R3/8/5K2 w - - 0 1"
-    check_board = Chess(initial_fen)
-    check_board.position.generate_general_moves()
-    # Словарь с ходами: ключ - координата фигуры, значение - список возможных ходов
-    # (ключи - строки "row,col", значения - списки строк "row,col")
-    main_color_moves = check_board.get_moves_for_active_color()
-    # main_color_moves = {
-    #     # Белая ладья на (5, 4) - строка 5 (3-я горизонталь), столбец 4 (e)
-    #     "5,4": [
-    #         # Ходы по вертикали (вверх)
-    #         "4,4", "3,4", "2,4", "1,4", "0,4",
-    #         # Ходы по вертикали (вниз)
-    #         "6,4", "7,4",
-    #         # Ходы по горизонтали (влево)
-    #         "5,3", "5,2", "5,1", "5,0",
-    #         # Ходы по горизонтали (вправо)
-    #         "5,5", "5,6", "5,7"
-    #     ],
-    #
-    #     # Белый король на (7, 5) - строка 7 (1-я горизонталь), столбец 5 (f)
-    #     "7,5": [
-    #         # Ходы вверх
-    #         "6,4", "6,5", "6,6",
-    #         # Ходы влево-вправо
-    #         "7,4", "7,6"
-    #     ]
-    # }
-    return render_template('game.html', fen=initial_fen, all_possible_moves=main_color_moves)
+    player_color = request.args.get('color') or session.get('player_color', 'white')
+    if player_color not in PLAYER_COLORS:
+        player_color = 'white'
+
+    session['player_color'] = player_color
+    current_fen = INITIAL_GAME_FEN
+    opening_ai_move = None
+
+    chess, main_color_moves = generated_moves_for(current_fen)
+    if player_color == 'black':
+        ai_move = random_move_from(main_color_moves)
+        if ai_move is not None:
+            ai_from_y, ai_from_x, ai_to_y, ai_to_x = ai_move
+            current_fen = chess.apply_move(ai_from_y, ai_from_x, ai_to_y, ai_to_x)
+            opening_ai_move = move_payload(ai_from_y, ai_from_x, ai_to_y, ai_to_x)
+            chess, main_color_moves = generated_moves_for(current_fen)
+
+    session['game_fen'] = current_fen
+    result = game_result(chess, main_color_moves)
+
+    return render_template(
+        'game.html',
+        fen=current_fen,
+        all_possible_moves=main_color_moves,
+        player_color=player_color,
+        ai_move=opening_ai_move,
+        game_result=result
+    )
+
+
+@app.route('/game/move', methods=['POST'])
+def make_game_move():
+    if "user" not in session:
+        return jsonify({'error': 'not_authorized'}), 401
+
+    data = request.get_json(silent=True) or {}
+    try:
+        from_y = int(data['from']['row'])
+        from_x = int(data['from']['col'])
+        to_y = int(data['to']['row'])
+        to_x = int(data['to']['col'])
+    except (KeyError, TypeError, ValueError):
+        return jsonify({'error': 'incorrect_move_payload'}), 400
+
+    current_fen = session.get('game_fen', INITIAL_GAME_FEN)
+    chess, _ = generated_moves_for(current_fen)
+
+    try:
+        after_player_fen = chess.apply_move(from_y, from_x, to_y, to_x, data.get('promotion'))
+    except ValueError as error:
+        return jsonify({'error': str(error)}), 400
+
+    chess, ai_moves = generated_moves_for(after_player_fen)
+    result = game_result(chess, ai_moves)
+    if result is not None:
+        session['game_fen'] = after_player_fen
+        return jsonify({
+            'fen': after_player_fen,
+            'all_possible_moves': {},
+            'player_move': move_payload(from_y, from_x, to_y, to_x),
+            'ai_move': None,
+            'game_result': result,
+            'game_over': True
+        })
+
+    ai_move = random_move_from(ai_moves)
+    if ai_move is None:
+        session['game_fen'] = after_player_fen
+        return jsonify({
+            'fen': after_player_fen,
+            'all_possible_moves': {},
+            'player_move': move_payload(from_y, from_x, to_y, to_x),
+            'ai_move': None,
+            'game_result': result,
+            'game_over': True
+        })
+
+    ai_from_y, ai_from_x, ai_to_y, ai_to_x = ai_move
+    after_ai_fen = chess.apply_move(ai_from_y, ai_from_x, ai_to_y, ai_to_x)
+    chess, player_moves = generated_moves_for(after_ai_fen)
+    result = game_result(chess, player_moves)
+    session['game_fen'] = after_ai_fen
+
+    return jsonify({
+        'fen': after_ai_fen,
+        'all_possible_moves': player_moves,
+        'player_move': move_payload(from_y, from_x, to_y, to_x),
+        'ai_move': move_payload(ai_from_y, ai_from_x, ai_to_y, ai_to_x),
+        'game_result': result,
+        'game_over': result is not None
+    })
 
 
 @app.route('/registration', methods=['GET'])

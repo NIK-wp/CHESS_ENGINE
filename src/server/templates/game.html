@@ -76,6 +76,7 @@
         .chessboard {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
             width: 100%;
             max-width: 560px;
             aspect-ratio: 1 / 1;
@@ -94,6 +95,9 @@
             transition: all 0.1s ease;
             position: relative;
             cursor: pointer;
+            min-width: 0;
+            min-height: 0;
+            line-height: 1;
         }
 
         .square-light {
@@ -304,6 +308,9 @@
         // }
         let currentFen = '{{ fen }}';
         let allPossibleMoves = {{ all_possible_moves | tojson | safe }};
+        const serverPlayerColor = {{ player_color | default('white') | tojson | safe }};
+        const openingAiMove = {{ ai_move | default(none) | tojson | safe }};
+        const initialGameResult = {{ game_result | default(none) | tojson | safe }};
 
         // Если FEN пустой или содержит {{ fen }}, используем начальную позицию
         if (!currentFen) {
@@ -315,12 +322,7 @@
             allPossibleMoves = {};
         }
 
-        // Получаем выбранный цвет из localStorage
-        const storedColor = localStorage.getItem('playerColor');
-        let playerColor = 'white';
-        if (storedColor === 'white' || storedColor === 'black') {
-            playerColor = storedColor;
-        }
+        let playerColor = (serverPlayerColor === 'black') ? 'black' : 'white';
 
         // Обновляем отображение цвета игрока
         document.getElementById('playerColorBadge').innerHTML = `🎨 Вы играете: ${playerColor === 'white' ? 'Белыми ♔' : 'Чёрными ♚'}`;
@@ -365,15 +367,24 @@
         let currentTurn = getTurnFromFEN(currentFen);
         let selectedSquare = null;  // { row, col }
         let highlightedMoves = [];  // [{ row, col }]
+        let isWaitingForServer = false;
+        let gameOver = Boolean(initialGameResult);
 
         // Подсчёт общего количества ходов
-        let totalMoves = 0;
-        for (const key in allPossibleMoves) {
-            if (allPossibleMoves.hasOwnProperty(key)) {
-                totalMoves += allPossibleMoves[key].length;
+        function getTotalMoves() {
+            let totalMoves = 0;
+            for (const key in allPossibleMoves) {
+                if (allPossibleMoves.hasOwnProperty(key)) {
+                    totalMoves += allPossibleMoves[key].length;
+                }
             }
+            return totalMoves;
         }
-        document.getElementById('movesCount').textContent = totalMoves;
+
+        function updateMovesCount() {
+            document.getElementById('movesCount').textContent = getTotalMoves();
+        }
+        updateMovesCount();
 
         // ----- Отрисовка доски -----
         function renderBoard() {
@@ -419,6 +430,13 @@
 
         // ----- Обработка клика по клетке -----
         function handleSquareClick(row, col) {
+            if (isWaitingForServer) {
+                return;
+            }
+            if (gameOver) {
+                return;
+            }
+
             const piece = board[row][col];
             const isPlayerTurn = (playerColor === currentTurn);
 
@@ -493,28 +511,69 @@
             highlightedMoves = [];
         }
 
-        // ----- Выполнение хода (упрощённо) -----
-        function performMove(fromRow, fromCol, toRow, toCol) {
-            // Перемещаем фигуру
-            board[toRow][toCol] = board[fromRow][fromCol];
-            board[fromRow][fromCol] = '';
-
-            // Меняем сторону
-            currentTurn = (currentTurn === 'white') ? 'black' : 'white';
-
-            // Очищаем выделение
+        async function performMove(fromRow, fromCol, toRow, toCol) {
+            isWaitingForServer = true;
             clearSelection();
-
-            // Обновляем доску
             renderBoard();
-            updateTurnInfo();
+            document.getElementById('gameStatus').textContent = '⏳ Ход отправлен...';
 
-            document.getElementById('gameStatus').textContent = '✅ Ход выполнен';
+            try {
+                const response = await fetch('/game/move', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        from: { row: fromRow, col: fromCol },
+                        to: { row: toRow, col: toCol }
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Не удалось выполнить ход');
+                }
+
+                allPossibleMoves = result.all_possible_moves || {};
+                updateBoardFromFEN(result.fen);
+                updateMovesCount();
+
+                if (result.ai_move) {
+                    const from = squareName(result.ai_move.from[0], result.ai_move.from[1]);
+                    const to = squareName(result.ai_move.to[0], result.ai_move.to[1]);
+                    document.getElementById('gameStatus').textContent = `✅ Ваш ход принят. AI ответил ${from}-${to}`;
+                } else if (result.game_over) {
+                    document.getElementById('gameStatus').textContent = '🏁 У AI нет доступных ходов';
+                } else {
+                    document.getElementById('gameStatus').textContent = '✅ Ваш ход принят';
+                }
+
+                if (result.game_result) {
+                    gameOver = true;
+                    showGameResult(result.game_result);
+                }
+            } catch (error) {
+                document.getElementById('gameStatus').textContent = `⛔ ${error.message}`;
+                updateBoardFromFEN(currentFen);
+            } finally {
+                isWaitingForServer = false;
+            }
+        }
+
+        function squareName(row, col) {
+            return `${String.fromCharCode(97 + col)}${8 - row}`;
         }
 
         // ----- Обновление информации о ходе -----
         function updateTurnInfo() {
             const turnText = document.getElementById('turnText');
+            const turnIndicator = document.getElementById('turnIndicator');
+
+            if (gameOver) {
+                turnText.textContent = 'Игра окончена';
+                turnIndicator.classList.remove('ai-turn');
+                return;
+            }
 
             if (currentTurn === 'white') {
                 turnText.textContent = 'Ход белых';
@@ -536,9 +595,28 @@
             updateTurnInfo();
         }
 
+        function showGameResult(result) {
+            clearSelection();
+            renderBoard();
+            updateMovesCount();
+            document.getElementById('gameStatus').textContent = `🏁 ${result.message}`;
+            updateTurnInfo();
+        }
+
+        function showOpeningAiMove() {
+            if (!openingAiMove) {
+                return false;
+            }
+
+            const from = squareName(openingAiMove.from[0], openingAiMove.from[1]);
+            const to = squareName(openingAiMove.to[0], openingAiMove.to[1]);
+            document.getElementById('gameStatus').textContent = `🤖 AI начал партию ходом ${from}-${to}`;
+            return true;
+        }
+
         // ----- Возврат в меню -----
         document.getElementById('backToMenuBtn').addEventListener('click', () => {
-            window.location.href = '/';
+            window.location.href = '/main_page';
         });
 
         // ----- Инициализация -----
@@ -546,7 +624,12 @@
             renderBoard();
             updateTurnInfo();
 
-            if (totalMoves > 0) {
+            const totalMoves = getTotalMoves();
+            if (initialGameResult) {
+                showGameResult(initialGameResult);
+            } else if (showOpeningAiMove()) {
+                return;
+            } else if (totalMoves > 0) {
                 document.getElementById('gameStatus').textContent = `🎯 Доступно ${totalMoves} ходов`;
             } else {
                 document.getElementById('gameStatus').textContent = 'ℹ️ Нет доступных ходов';
