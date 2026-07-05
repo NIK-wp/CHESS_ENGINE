@@ -1,8 +1,8 @@
 import pytest
 
-from src.chess import Chess
-from src.enums import Color
-from src.figure import Figure
+from src.engine.chess import Chess
+from src.engine.enums import Color
+from src.engine.figure import Figure
 
 
 class TestPosition:

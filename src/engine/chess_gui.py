@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import font
 
-from src.chess import Chess
+from src.engine.chess import Chess
 
 
 class ChessGUI:

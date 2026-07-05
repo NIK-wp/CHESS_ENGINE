@@ -204,5 +204,5 @@ __marimo__/
 
 .idea
 
-src/t.py
+src/engine/t.py
 *chess_db.db

@@ -3,8 +3,8 @@ import random
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from src.chess import Chess
-from src.enums import Color
+from src.engine.chess import Chess
+from src.engine.enums import Color
 from src.server.db import init_db, insert_data, is_exist, select_password
 from src.server.utils import checking_password_security
 

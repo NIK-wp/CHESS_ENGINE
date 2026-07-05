@@ -2,10 +2,10 @@
 
 # import hashlib
 
-from src.coord import Coord
-from src.enums import Color, FigureType
-from src.figure import Figure
-from src.position import Position
+from src.engine.coord import Coord
+from src.engine.enums import Color, FigureType
+from src.engine.figure import Figure
+from src.engine.position import Position
 
 
 class Chess:

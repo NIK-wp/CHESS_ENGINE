@@ -1,7 +1,7 @@
 """Модуль, который содержит реализацию класса Figure."""
 
-from src.coord import Coord, CoordWithTransform, CoordWithCastling
-from src.enums import Color, FigureType
+from src.engine.coord import Coord, CoordWithTransform, CoordWithCastling
+from src.engine.enums import Color, FigureType
 
 
 class Figure:

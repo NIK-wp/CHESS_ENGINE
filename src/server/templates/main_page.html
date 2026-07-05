@@ -245,12 +245,20 @@
             text-align: center;
             transition: all 0.3s ease;
             border: 1px solid rgba(102, 126, 234, 0.2);
+            cursor: pointer;
+            user-select: none;
         }
 
         .info-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
             border-color: #667eea;
+        }
+
+        .info-card.selected-mode {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            box-shadow: 0 0 0 2px #667eea, 0 10px 25px rgba(102, 126, 234, 0.2);
         }
 
         .info-icon { font-size: 2.5rem; margin-bottom: 15px; display: inline-block; }
@@ -285,6 +293,7 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .btn-secondary {
             background: rgba(255, 255, 255, 0.9);
@@ -505,26 +514,26 @@
                 </div>
 
                 <div class="info-panel">
-                    <div class="info-card">
+                    <div class="info-card" data-mode="ai">
                         <div class="info-icon">🤖</div>
-                        <h3>AI Соперник</h3>
+                        <h3>AI соперник</h3>
                         <p>Умный шахматный движок с несколькими уровнями сложности</p>
                     </div>
-                    <div class="info-card">
+                    <div class="info-card" data-mode="two-player">
                         <div class="info-icon">🎮</div>
-                        <h3>Режимы игры</h3>
-                        <p>Игра против ИИ, с другом или анализ партий</p>
+                        <h3>Совместная игра</h3>
+                        <p>Игра с другом на одном устройстве или по сети</p>
                     </div>
-                    <div class="info-card">
+                    <div class="info-card" data-mode="analysis">
                         <div class="info-icon">📊</div>
-                        <h3>Анализ позиций</h3>
+                        <h3>Анализ позиции</h3>
                         <p>Оценка позиции, подсказки и статистика</p>
                     </div>
                 </div>
 
                 <div class="action-buttons">
-                    <button class="btn btn-primary" id="startGameBtn">
-                        🤖 AI соперник
+                    <button class="btn btn-primary" id="startGameBtn" disabled>
+                        ▶ Играть
                     </button>
                     <button class="btn btn-secondary" id="profileBtn">
                         👤 Профиль
@@ -568,6 +577,7 @@
 
     <script>
         let selectedColor = 'white';
+        let selectedMode = null; // 'ai', 'two-player', 'analysis'
 
         function initChessboard() {
             const board = document.getElementById('chessboard');
@@ -587,10 +597,25 @@
                     square.className = `chess-square ${isLight ? 'square-light' : 'square-dark'}`;
                     const pieceKey = file + rank;
                     square.textContent = pieces[pieceKey] || '';
-                    square.addEventListener('click', () => showToast('🎯 Выберите AI соперника для игры!'));
+                    square.addEventListener('click', () => {
+                        if (!selectedMode) {
+                            showToast('⚠️ Сначала выберите режим игры на панели выше');
+                        } else {
+                            showToast(`🎯 Выбран режим: ${getModeName(selectedMode)}. Нажмите "Играть"`);
+                        }
+                    });
                     board.appendChild(square);
                 }
             }
+        }
+
+        function getModeName(mode) {
+            const names = {
+                'ai': 'AI соперник',
+                'two-player': 'Совместная игра',
+                'analysis': 'Анализ позиции'
+            };
+            return names[mode] || mode;
         }
 
         function showToast(message, duration = 3000) {
@@ -625,20 +650,28 @@
             });
         }
 
-        // Переход на игровую страницу с выбранным цветом
-        function startGameWithAI() {
+        // Запуск игры в зависимости от выбранного режима
+        function startGame() {
             const startBtn = document.getElementById('startGameBtn');
             const originalText = startBtn.innerHTML;
-            startBtn.innerHTML = '<span class="loading-spinner"></span> Запуск игры...';
+            startBtn.innerHTML = '<span class="loading-spinner"></span> Запуск...';
             startBtn.disabled = true;
 
-            // Сохраняем выбранный цвет в localStorage для передачи на игровую страницу
-            localStorage.setItem('playerColor', selectedColor);
-            localStorage.setItem('gameMode', 'ai');
+            localStorage.setItem('gameMode', selectedMode);
 
-            // Небольшая задержка для анимации и перехода
+            // Для режима AI — показываем выбор цвета
+            if (selectedMode === 'ai') {
+                setTimeout(() => {
+                    startBtn.innerHTML = originalText;
+                    startBtn.disabled = false;
+                    showColorModal();
+                }, 400);
+                return;
+            }
+
+            // Для других режимов — сразу переход
             setTimeout(() => {
-                window.location.href = `/game?color=${encodeURIComponent(selectedColor)}`;
+                window.location.href = `/game?mode=${encodeURIComponent(selectedMode)}`;
             }, 400);
 
             setTimeout(() => {
@@ -647,6 +680,48 @@
                     startBtn.disabled = false;
                 }
             }, 2000);
+        }
+
+        // Запуск игры с AI после выбора цвета
+        function startGameWithAI() {
+            const startBtn = document.getElementById('startGameBtn');
+            const originalText = startBtn.innerHTML;
+            startBtn.innerHTML = '<span class="loading-spinner"></span> Запуск...';
+            startBtn.disabled = true;
+
+            localStorage.setItem('playerColor', selectedColor);
+            localStorage.setItem('gameMode', 'ai');
+
+            setTimeout(() => {
+                window.location.href = `/game?color=${encodeURIComponent(selectedColor)}&mode=ai`;
+            }, 400);
+
+            setTimeout(() => {
+                if (startBtn.disabled) {
+                    startBtn.innerHTML = originalText;
+                    startBtn.disabled = false;
+                }
+            }, 2000);
+        }
+
+        // Обработчики для выбора режима
+        function initModeSelection() {
+            const cards = document.querySelectorAll('.info-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    // Снимаем выделение со всех
+                    cards.forEach(c => c.classList.remove('selected-mode'));
+                    // Выделяем выбранный
+                    card.classList.add('selected-mode');
+                    selectedMode = card.dataset.mode;
+
+                    // Активируем кнопку "Играть"
+                    const startBtn = document.getElementById('startGameBtn');
+                    startBtn.disabled = false;
+
+                    showToast(`✅ Выбран режим: ${getModeName(selectedMode)}`);
+                });
+            });
         }
 
         // Обработчики для модального окна выбора цвета
@@ -691,11 +766,12 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initChessboard();
+            initModeSelection();
             initColorModalHandlers();
-            showToast('Добро пожаловать! Выберите AI соперника', 3500);
+            showToast('👋 Выберите режим игры на панели выше', 4000);
 
             const startBtn = document.getElementById('startGameBtn');
-            startBtn.addEventListener('click', () => showColorModal());
+            startBtn.addEventListener('click', startGame);
 
             const profileBtn = document.getElementById('profileBtn');
             profileBtn.addEventListener('click', showProfile);

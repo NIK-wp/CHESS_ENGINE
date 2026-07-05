@@ -2,7 +2,7 @@ import hashlib
 
 import pytest
 
-from src.chess import Chess
+from src.engine.chess import Chess
 
 
 class TestChess:

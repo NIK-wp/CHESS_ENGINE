@@ -1,8 +1,8 @@
 """Модуль, содержащий реализацию класса Position."""
 
-from src.coord import Coord
-from src.enums import Color, FigureType
-from src.figure import Figure
+from src.engine.coord import Coord
+from src.engine.enums import Color, FigureType
+from src.engine.figure import Figure
 
 
 class Position:

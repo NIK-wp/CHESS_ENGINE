@@ -1,7 +1,6 @@
-from src.Node import Node
-from src.chess import Chess
-from src.enums import FigureType, Color
-from copy import deepcopy
+from src.engine.Node import Node
+from src.engine.chess import Chess
+from src.engine.enums import FigureType, Color
 
 
 class Tree:
